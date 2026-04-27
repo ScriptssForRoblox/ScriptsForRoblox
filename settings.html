@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Configurações — ScriptDrop</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<link rel="stylesheet" href="style.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<style>
+  .stab { display: none; flex-direction: column; gap: 25px; }
+  .stab.active { display: flex; animation: fadeUp 0.4s ease; }
+  .settings-card { 
+    background: #111; 
+    border: 1px solid #222; 
+    border-radius: 20px; 
+    padding: 40px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+  }
+  .stab-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; color: #fff; }
+  .save-msg { font-size: 0.9rem; font-weight: 600; margin-top: 10px; height: 20px; }
+  .danger-card { border-color: rgba(255, 107, 107, 0.2); background: rgba(255, 107, 107, 0.02); }
+  
+  .file-input-wrap { display: flex; gap: 10px; align-items: center; }
+  .btn-file { background: #222; border: 1px solid #333; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+  .btn-file:hover { background: #333; }
+  .hidden-file { display: none; }
+  .discord-box { background: #5865f2; color: #fff; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3); }
+  .btn-discord-connect { background: #fff; color: #5865f2; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; }
+  .btn-discord-connect:hover { background: #f0f0f0; transform: translateY(-2px); }
+  .discord-info { display: flex; align-items: center; gap: 15px; }
+</style>
+<body>
+<canvas id="particles"></canvas>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" href="./"><div class="logo-glow">⚡</div><span>Script<span class="acc">Drop</span></span></a>
+    <div class="nav-links">
+      <a href="./" class="nl"><i class="fas fa-home"></i> Home</a>
+    </div>
+    <div class="nav-right">
+      <div id="nav-guest" class="nav-auth">
+        <a href="login" class="btn-ghost-sm">Entrar</a>
+        <a href="register" class="btn-primary-sm">Registrar</a>
+      </div>
+      <div id="nav-logged" class="nav-user-area" style="display:none">
+        <div class="nav-avatar-wrap" id="navAvatarWrap">
+          <div class="nav-avatar" id="navAvatar"></div>
+          <span id="navName"></span>
+          <i class="fas fa-chevron-down nav-chev"></i>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="profile"><i class="fas fa-user"></i> Meu Perfil</a>
+            <a href="settings" class="active"><i class="fas fa-cog"></i> Configurações</a>
+            <div class="dd-divider"></div>
+            <a onclick="logout()" style="color:#ff6b6b;cursor:pointer"><i class="fas fa-sign-out-alt"></i> Sair</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="settings-wrap" id="settingsWrap">
+  <div class="settings-sidebar">
+    <div class="settings-nav">
+      <button class="snav active" onclick="showTab('account',this)"><i class="fas fa-user"></i> Conta</button>
+      <button class="snav" onclick="showTab('appearance',this)"><i class="fas fa-paint-brush"></i> Aparência</button>
+      <button class="snav" onclick="showTab('security',this)"><i class="fas fa-shield-alt"></i> Segurança</button>
+      <button class="snav" id="adminTabBtn" onclick="showTab('admin',this)" style="display:none; color:#ffd700"><i class="fas fa-crown"></i> Painel Owner</button>
+      <button class="snav" onclick="showTab('danger',this)" style="color:#ff6b6b"><i class="fas fa-trash"></i> Zona de Perigo</button>
+    </div>
+  </div>
+  <div class="settings-content">
+
+    <!-- ACCOUNT -->
+    <div class="stab active" id="tab-account">
+      <h2 class="stab-title"><i class="fas fa-user"></i> Informações da Conta</h2>
+      <div class="settings-card">
+        <div class="fg"><label><i class="fas fa-quote-left"></i> Bio</label><input id="sBio" placeholder="Fale sobre você..."/></div>
+        
+        <div class="fg">
+          <label><i class="fas fa-image"></i> Avatar (PFP)</label>
+          <div class="file-input-wrap">
+            <input id="sAvatarURL" placeholder="URL da imagem..." style="flex-grow:1"/>
+            <input type="file" id="fileAvatar" class="hidden-file" accept="image/*" onchange="handleFile(this, 'sAvatarURL')"/>
+            <button class="btn-file" onclick="document.getElementById('fileAvatar').click()"><i class="fas fa-upload"></i> Arquivo</button>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label><i class="fas fa-panorama"></i> Banner</label>
+          <div class="file-input-wrap">
+            <input id="sBanner" placeholder="URL da imagem..." style="flex-grow:1"/>
+            <input type="file" id="fileBanner" class="hidden-file" accept="image/*" onchange="handleFile(this, 'sBanner')"/>
+            <button class="btn-file" onclick="document.getElementById('fileBanner').click()"><i class="fas fa-upload"></i> Arquivo</button>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label><i class="fas fa-music"></i> Música do Perfil</label>
+          <div class="file-input-wrap">
+            <input id="sMusic" placeholder="URL .mp3 ou carregar arquivo..." style="flex-grow:1"/>
+            <input type="file" id="fileMusic" class="hidden-file" accept="audio/*" onchange="handleFile(this, 'sMusic')"/>
+            <button class="btn-file" onclick="document.getElementById('fileMusic').click()"><i class="fas fa-upload"></i> Arquivo</button>
+          </div>
+        </div>
+
+        <button class="btn-submit" onclick="saveAccount()"><i class="fas fa-save"></i> Salvar</button>
+        <p id="accountMsg" class="save-msg"></p>
+      </div>
+    </div>
+
+    <!-- APPEARANCE -->
+    <div class="stab" id="tab-appearance">
+      <h2 class="stab-title"><i class="fas fa-paint-brush"></i> Aparência do Perfil</h2>
+      <div class="settings-card">
+        <div class="fg"><label>Cor do Avatar</label>
+          <div class="color-row">
+            <input type="color" id="sAvatarColor" value="#7c6af7" class="color-pick"/>
+            <div class="color-presets">
+              <span class="cp" style="background:#7c6af7" onclick="document.getElementById('sAvatarColor').value='#7c6af7'"></span>
+              <span class="cp" style="background:#ff6b35" onclick="document.getElementById('sAvatarColor').value='#ff6b35'"></span>
+              <span class="cp" style="background:#00d4aa" onclick="document.getElementById('sAvatarColor').value='#00d4aa'"></span>
+              <span class="cp" style="background:#ff4757" onclick="document.getElementById('sAvatarColor').value='#ff4757'"></span>
+              <span class="cp" style="background:#ffd700" onclick="document.getElementById('sAvatarColor').value='#ffd700'"></span>
+              <span class="cp" style="background:#1e90ff" onclick="document.getElementById('sAvatarColor').value='#1e90ff'"></span>
+            </div>
+          </div>
+        </div>
+        <div class="fg"><label>Cor do Nome</label>
+          <div class="color-row">
+            <input type="color" id="sNameColor" value="#ffffff" class="color-pick"/>
+            <div class="color-presets">
+              <span class="cp" style="background:#ffffff" onclick="document.getElementById('sNameColor').value='#ffffff'"></span>
+              <span class="cp" style="background:#7c6af7" onclick="document.getElementById('sNameColor').value='#7c6af7'"></span>
+              <span class="cp" style="background:#ff6b35" onclick="document.getElementById('sNameColor').value='#ff6b35'"></span>
+              <span class="cp" style="background:#00d4aa" onclick="document.getElementById('sNameColor').value='#00d4aa'"></span>
+              <span class="cp" style="background:#ffd700" onclick="document.getElementById('sNameColor').value='#ffd700'"></span>
+            </div>
+          </div>
+        </div>
+        <div class="fg preview-area">
+          <label>Preview</label>
+          <div class="profile-preview" id="profilePreview">
+            <div class="prev-av" id="prevAv">A</div>
+            <div class="prev-name" id="prevName">Usuário</div>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="saveAppearance()"><i class="fas fa-save"></i> Salvar Aparência</button>
+        <p id="appearMsg" class="save-msg"></p>
+      </div>
+    </div>
+
+    <!-- SECURITY -->
+    <div class="stab" id="tab-security">
+      <h2 class="stab-title"><i class="fas fa-shield-alt"></i> Segurança</h2>
+      <div class="settings-card">
+        <div class="fg"><label>Senha Atual</label><input type="password" id="sOldPass" placeholder="Senha atual"/></div>
+        <div class="fg"><label>Nova Senha</label><input type="password" id="sNewPass" placeholder="Nova senha"/></div>
+        <div class="fg"><label>Confirmar Nova Senha</label><input type="password" id="sConfPass" placeholder="Repita a nova senha"/></div>
+        <button class="btn-submit" onclick="changePassword()"><i class="fas fa-key"></i> Alterar Senha</button>
+        <p id="secMsg" class="save-msg"></p>
+      </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div class="stab" id="tab-admin">
+      <h2 class="stab-title" style="color:#ffd700"><i class="fas fa-tools"></i> Gerenciamento Global</h2>
+      <div class="settings-card">
+        <div class="fg">
+          <label>Buscar Usuário (ID ou Nome)</label>
+          <input type="text" id="adminSearch" placeholder="Digite para buscar..." oninput="renderAdminUsers()"/>
+        </div>
+        <div id="adminUserList"></div>
+      </div>
+    </div>
+
+    <!-- DANGER -->
+    <div class="stab" id="tab-danger">
+      <h2 class="stab-title" style="color:#ff6b6b"><i class="fas fa-trash"></i> Zona de Perigo</h2>
+      <div class="settings-card danger-card">
+        <p>Ao deletar sua conta, todos os seus scripts e dados serão removidos permanentemente.</p>
+        <button class="btn-danger" onclick="deleteAccount()"><i class="fas fa-trash-alt"></i> Deletar Minha Conta</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">⚡ Script<span class="acc">Drop</span></div>
+    <p>© 2025 ScriptDrop</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+function showTab(name, btn){
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.snav').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function handleFile(input, targetId) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 15 * 1024 * 1024) { // 15MB
+    showNotification("Arquivo muito grande! Máximo de 15MB permitido.", "error");
+    input.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => { 
+    document.getElementById(targetId).value = e.target.result; 
+    updatePreview(); 
+  };
+  reader.readAsDataURL(file);
+}
+
+function updatePreview(){
+  const session = localStorage.getItem('session');
+  const av = document.getElementById('prevAv');
+  const name = document.getElementById('prevName');
+  const banner = document.getElementById('sBanner').value;
+  const previewBox = document.getElementById('profilePreview');
+
+  if(av) {
+    av.style.background = document.getElementById('sAvatarColor').value;
+    av.textContent = session ? session.charAt(0).toUpperCase() : 'A';
+    const avatarURL = document.getElementById('sAvatarURL').value;
+    if(avatarURL) av.innerHTML = `<img src="${avatarURL}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`;
+  }
+  
+  if(name) {
+    name.style.color = document.getElementById('sNameColor').value;
+    name.textContent = session || 'Usuário';
+  }
+
+  if(previewBox && banner) {
+    previewBox.style.backgroundImage = `url('${banner}')`;
+    previewBox.style.backgroundSize = 'cover';
+    previewBox.style.backgroundPosition = 'center';
+  }
+}
+
+function loadSettings(){
+  const session = localStorage.getItem('session');
+  if(!session){ location.href='login'; return; }
+  const users = JSON.parse(localStorage.getItem('users')||'[]');
+  const user = users.find(u=>u.username===session)||{};
+  document.getElementById('sBio').value = user.bio||'';
+  document.getElementById('sAvatarURL').value = user.avatarURL||'';
+  document.getElementById('sBanner').value = user.banner||'';
+  document.getElementById('sAvatarColor').value = user.avatarColor||'#7c6af7';
+  document.getElementById('sNameColor').value = user.nameColor||'#ffffff';
+  updatePreview();
+  
+  document.getElementById('sAvatarColor').addEventListener('input', updatePreview);
+  document.getElementById('sNameColor').addEventListener('input', updatePreview);
+
+  // Carrega status do discord
+  const alexId = "937937001112555531";
+
+  if(user.id === alexId || user.username.toLowerCase() === 'alex') {
+    document.getElementById('adminTabBtn').style.display = 'flex';
+    renderAdminUsers();
+  }
+}
+
+let tempBadges = {}; // Armazena temporariamente GIFs/Imagens das badges antes de salvar
+
+function renderAdminUsers() {
+  const q = document.getElementById('adminSearch').value.toLowerCase();
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+  const list = document.getElementById('adminUserList');
+  
+  const filtered = users.filter(u => u.id.includes(q) || u.username.toLowerCase().includes(q));
+  
+  list.innerHTML = filtered.map(u => `
+    <div class="admin-user-row">
+      <div class="admin-user-info">
+        <div>
+          <strong>${u.username}</strong> <small>(#${u.id})</small>
+          <div style="font-size:0.7rem; color:#666">Status: ${u.isBanned ? 'BANIDO' : 'Ativo'} | Avisos: ${u.warns || 0}</div>
+        </div>
+      </div>
+
+      <!-- Seção Moderação -->
+      <div class="admin-section">
+        <div class="admin-section-title"><i class="fas fa-gavel"></i> Punições & Status</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+           <div class="fg">
+             <label>Avisos: ${u.warns || 0}</label>
+             <div style="display:flex; gap:5px">
+               <button class="btn-admin-action btn-warn" onclick="adminAction('${u.id}', 'warn')">+ Warn</button>
+               <button class="btn-reset-warn" onclick="adminAction('${u.id}', 'resetWarn')">Reset Warns</button>
+             </div>
+           </div>
+           <div class="fg">
+             <label>Status da Conta</label>
+             <button class="btn-admin-action btn-ban" onclick="adminAction('${u.id}', '${u.isBanned ? 'unban' : 'ban'}')">${u.isBanned ? 'UNBAN' : 'BANIR'}</button>
+           </div>
+        </div>
+        <div class="admin-actions" style="margin-top:10px">
+          <button class="btn-admin-action btn-timeout" onclick="adminAction('${u.id}', 'timeout')">Silenciar (Timeout 24h)</button>
+          <button class="btn-admin-action btn-file" onclick="adminAction('${u.id}', 'togglePost')">${u.canPost === false ? 'Liberar Posts' : 'Bloquear Posts'}</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-section-title"><i class="fas fa-award"></i> Atribuição de Badges Oficiais</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input type="text" id="badgeDesc-${u.id}" placeholder="Nome/Descrição (ex: Verificado)" style="flex:1; min-width:150px; font-size:0.8rem; padding:8px;">
+          <input type="text" id="badgeIcon-${u.id}" placeholder="Emoji ou URL" style="flex:1; min-width:150px; font-size:0.8rem; padding:8px;">
+          
+          <input type="file" id="badgeFile-${u.id}" accept="image/*,image/gif" style="display:none" onchange="processBadgeFile('${u.id}', this)">
+          <button class="btn-admin-action btn-file" onclick="document.getElementById('badgeFile-${u.id}').click()">
+            <i class="fas fa-file-import"></i> GIF/Img
+          </button>
+          
+          <button class="btn-admin-action btn-badge" onclick="adminGiveBadge('${u.id}')">
+            <i class="fas fa-plus-circle"></i> Atribuir Badge
+          </button>
+        </div>
+        <div id="badgeStatus-${u.id}" style="font-size:0.7rem; margin-top:5px; color:var(--primary)"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function processBadgeFile(uid, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    tempBadges[uid] = e.target.result;
+    document.getElementById(`badgeStatus-${uid}`).innerHTML = `<i class="fas fa-check"></i> Imagem carregada: ${file.name}`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function adminGiveBadge(targetId) {
+  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  const idx = users.findIndex(u => u.id === targetId);
+  if(idx === -1) return;
+
+  const desc = document.getElementById(`badgeDesc-${targetId}`).value.trim();
+  let icon = document.getElementById(`badgeIcon-${targetId}`).value.trim();
+  
+  // Se tiver um arquivo carregado, usa ele em vez do texto
+  if (tempBadges[targetId]) {
+    icon = tempBadges[targetId];
+  }
+
+  if(!desc || !icon) return showNotification("Preencha o nome da badge e escolha um ícone ou imagem.", "error");
+
+  if(!users[idx].badges) users[idx].badges = [];
+  users[idx].badges.push({ icon, desc });
+
+  localStorage.setItem('users', JSON.stringify(users));
+  delete tempBadges[targetId];
+  renderAdminUsers();
+  showNotification(`Badge "${desc}" atribuída com sucesso!`, "success");
+}
+
+function adminAction(targetId, type, extra) {
+  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  const idx = users.findIndex(u => u.id === targetId);
+  if(idx === -1) return;
+
+  if(type === 'ban') users[idx].isBanned = true;
+  if(type === 'unban') users[idx].isBanned = false;
+  if(type === 'warn') users[idx].warns = (users[idx].warns || 0) + 1;
+  if(type === 'timeout') users[idx].timeoutUntil = Date.now() + (24 * 60 * 60 * 1000); // 24h
+  if(type === 'togglePost') users[idx].canPost = !(users[idx].canPost !== false);
+  if(type === 'removeBadge') users[idx].badges.splice(extra, 1);
+
+  localStorage.setItem('users', JSON.stringify(users));
+  renderAdminUsers();
+  showNotification("Ação administrativa concluída!", "success");
+}
+
+function saveAccount(){
+  const session = localStorage.getItem('session');
+  const users = JSON.parse(localStorage.getItem('users')||'[]');
+  const idx = users.findIndex(u=>u.username===session);
+  users[idx].bio = document.getElementById('sBio').value.trim();
+  users[idx].avatarURL = document.getElementById('sAvatarURL').value.trim();
+  users[idx].banner = document.getElementById('sBanner').value.trim();
+  users[idx].profileMusic = document.getElementById('sMusic').value.trim();
+  try {
+    localStorage.setItem('users', JSON.stringify(users));
+    showMsg('accountMsg', '✅ Salvo com sucesso!', '#00d4aa');
+    showNotification("Configurações da conta salvas!");
+  } catch (e) {
+    showNotification("Erro: O arquivo é muito pesado para o armazenamento do navegador. Use uma URL.", "error");
+  }
+}
+
+function saveAppearance(){
+  const session = localStorage.getItem('session');
+  const users = JSON.parse(localStorage.getItem('users')||'[]');
+  const idx = users.findIndex(u=>u.username===session);
+  users[idx].avatarColor = document.getElementById('sAvatarColor').value;
+  users[idx].nameColor = document.getElementById('sNameColor').value;
+  localStorage.setItem('users',JSON.stringify(users));
+  showMsg('appearMsg','✅ Aparência salva!','#00d4aa');
+}
+
+function changePassword(){
+  const session = localStorage.getItem('session');
+  const users = JSON.parse(localStorage.getItem('users')||'[]');
+  const idx = users.findIndex(u=>u.username===session);
+  const old = document.getElementById('sOldPass').value;
+  const nw = document.getElementById('sNewPass').value;
+  const cf = document.getElementById('sConfPass').value;
+  if(users[idx].password !== old) return showMsg('secMsg','❌ Senha atual incorreta.','#ff6b6b');
+  if(nw !== cf) return showMsg('secMsg','❌ Senhas não coincidem.','#ff6b6b');
+  if(nw.length < 4) return showMsg('secMsg','❌ Senha muito curta.','#ff6b6b');
+  users[idx].password = nw;
+  localStorage.setItem('users',JSON.stringify(users));
+  showMsg('secMsg','✅ Senha alterada!','#00d4aa');
+}
+
+function deleteAccount(){
+  if(!confirm('Tem certeza? Isso é irreversível!')) return;
+  const session = localStorage.getItem('session');
+  let users = JSON.parse(localStorage.getItem('users')||'[]');
+  users = users.filter(u=>u.username!==session);
+  localStorage.setItem('users',JSON.stringify(users));
+  let posts = JSON.parse(localStorage.getItem('posts')||'[]');
+  posts = posts.filter(p=>p.author!==session);
+  localStorage.setItem('posts',JSON.stringify(posts));
+  localStorage.removeItem('session');
+  location.href='./';
+}
+
+function showMsg(id, msg, color){
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.color = color;
+  setTimeout(()=>el.textContent='', 3000);
+}
+
+loadSettings();
+</script>
+</body>
+</html>

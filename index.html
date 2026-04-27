@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ScriptDrop — Scripts Premium</title>
+
+<!-- Open Graph / Discord Rich Embed -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ScriptDrop">
+<meta property="og:title" content="ScriptDrop — Plataforma #1 de Scripts">
+<meta property="og:description" content="Explore, copie e publique scripts premium da comunidade. Grátis, rápido e seguro.">
+<meta property="og:image" content="https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png"> <!-- Substitua por uma URL de imagem real se possível -->
+<meta property="og:url" content="https://scriptdrop.com">
+<meta name="theme-color" content="#7c6af7">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<link rel="stylesheet" href="style.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<!-- PARTICLES BG -->
+<canvas id="particles"></canvas>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" href="./">
+      <div class="logo-glow">⚡</div>
+      <span>Script<span class="acc">Drop</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="./" class="nl active"><i class="fas fa-home"></i> Home</a>
+      <a href="#scripts" class="nl"><i class="fas fa-code"></i> Scripts</a>
+    </div>
+    <div class="nav-right">
+      <div id="nav-guest" class="nav-auth">
+        <a href="login" class="btn-ghost-sm">Entrar</a>
+        <a href="register" class="btn-primary-sm">Registrar</a>
+      </div>
+      <div id="nav-logged" class="nav-user-area" style="display:none">
+        <button class="btn-admin-nav" id="navAdminBtn" onclick="location.href='settings'"><i class="fas fa-crown"></i> Admin</button>
+        <button class="btn-post-nav" onclick="openPostModal()"><i class="fas fa-plus"></i> Postar</button>
+        <div class="nav-avatar-wrap" id="navAvatarWrap">
+          <div class="nav-avatar" id="navAvatar"></div>
+          <span id="navName"></span>
+          <i class="fas fa-chevron-down nav-chev"></i>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="profile"><i class="fas fa-user"></i> Meu Perfil</a>
+            <a href="settings"><i class="fas fa-cog"></i> Configurações</a>
+            <div class="dd-divider"></div>
+            <a onclick="logout()" style="color:#ff6b6b;cursor:pointer"><i class="fas fa-sign-out-alt"></i> Sair</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-orbs">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge animate-fade-up" style="animation-delay:.1s">
+      <span class="pulse-dot"></span> Plataforma #1 de Scripts
+    </div>
+    <h1 class="hero-title animate-fade-up" style="animation-delay:.2s">
+      Compartilhe Scripts<br/><span class="grad-text">Incríveis</span>
+    </h1>
+    <p class="hero-sub animate-fade-up" style="animation-delay:.3s">
+      Explore, copie e publique scripts da comunidade.<br/>Grátis para sempre. Sem complicação.
+    </p>
+    <div class="hero-btns animate-fade-up" style="animation-delay:.4s">
+      <a href="#scripts" class="btn-hero-primary"><i class="fas fa-fire"></i> Explorar Scripts</a>
+      <a href="register" class="btn-hero-ghost"><i class="fas fa-rocket"></i> Criar Conta</a>
+    </div>
+    <div class="hero-stats animate-fade-up" style="animation-delay:.5s">
+      <div class="hstat"><span id="statScripts" class="hstat-num">0</span><small>Scripts</small></div>
+      <div class="hstat-sep"></div>
+      <div class="hstat"><span id="statUsers" class="hstat-num">0</span><small>Usuários</small></div>
+      <div class="hstat-sep"></div>
+      <div class="hstat"><span id="statVisits" class="hstat-num">0</span><small>Visitas</small></div>
+    </div>
+  </div>
+  <div class="hero-code animate-fade-up" style="animation-delay:.3s">
+    <div class="code-win">
+      <div class="code-bar">
+        <div class="code-dots"><span class="cd r"></span><span class="cd y"></span><span class="cd g"></span></div>
+        <span class="code-fname">speed_hack.lua</span>
+        <span class="code-lang">Lua</span>
+      </div>
+      <pre class="code-body"><span class="t-kw">local</span> <span class="t-var">Players</span> = game:GetService(<span class="t-str">"Players"</span>)
+<span class="t-kw">local</span> <span class="t-var">lp</span> = Players.LocalPlayer
+<span class="t-kw">local</span> <span class="t-var">char</span> = lp.Character
+
+<span class="t-cm">-- ⚡ Speed &amp; Jump Boost</span>
+<span class="t-var">char</span>.Humanoid.WalkSpeed = <span class="t-num">150</span>
+<span class="t-var">char</span>.Humanoid.JumpPower = <span class="t-num">250</span>
+
+<span class="t-kw">game</span>:GetService(<span class="t-str">"RunService"</span>).Heartbeat:<span class="t-fn">Connect</span>(<span class="t-kw">function</span>()
+  <span class="t-var">char</span>.Humanoid.WalkSpeed = <span class="t-num">150</span>
+<span class="t-kw">end</span>)</pre>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<main class="main-wrap" id="scripts">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-card">
+      <div class="sc-title"><i class="fas fa-clock"></i> Recentes</div>
+      <div id="recentList"><div class="sk-item"></div><div class="sk-item"></div><div class="sk-item"></div></div>
+    </div>
+    <div class="sidebar-card">
+      <div class="sc-title"><i class="fas fa-chart-bar"></i> Estatísticas</div>
+      <div class="stats-list">
+        <div class="stat-row"><span>Scripts</span><span id="sideStatScripts" class="stat-val">0</span></div>
+        <div class="stat-row"><span>Usuários</span><span id="sideStatUsers" class="stat-val">0</span></div>
+        <div class="stat-row"><span>Visitas</span><span id="sideStatVisits" class="stat-val">0</span></div>
+      </div>
+    </div>
+    <div class="sidebar-card">
+      <div class="sc-title"><i class="fas fa-tags"></i> Tags Populares</div>
+      <div class="tags-cloud" id="tagCloud"></div>
+    </div>
+  </aside>
+
+  <!-- FEED -->
+  <section class="feed-area">
+    <div class="feed-top">
+      <div>
+        <h2 class="feed-title"><i class="fas fa-fire" style="color:#ff6b35"></i> Scripts</h2>
+        <p class="feed-sub">Explore os scripts da comunidade</p>
+      </div>
+      <div class="feed-controls">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Buscar scripts..." oninput="renderFeed()"/>
+        </div>
+        <div class="filter-tabs">
+          <button class="ftab active" onclick="setFilter('all',this)">Todos</button>
+          <button class="ftab" onclick="setFilter('recent',this)">Recentes</button>
+        </div>
+      </div>
+    </div>
+    <div id="scriptGrid" class="script-grid"></div>
+  </section>
+</main>
+
+<!-- MODAL POSTAR -->
+<div class="modal-bg" id="postModal">
+  <div class="modal-box animate-scale">
+    <div class="modal-head">
+      <h3><i class="fas fa-upload"></i> Publicar Script</h3>
+      <button class="modal-x" onclick="closePostModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label>Título *</label><input id="mTitle" placeholder="Ex: Speed Hack — Blox Fruits"/></div>
+      <div class="fg"><label>Jogo / Categoria *</label><input id="mGame" placeholder="Ex: Blox Fruits, Universal..."/></div>
+      <div class="fg"><label>Tags <span class="opt">(separadas por vírgula)</span></label><input id="mTags" placeholder="Ex: speed, hack, op"/></div>
+      <div class="fg"><label>Imagem de Capa <span class="opt">(URL)</span></label><input id="mImage" placeholder="https://..."/></div>
+      <div class="fg"><label>Descrição</label><input id="mDesc" placeholder="O que esse script faz?"/></div>
+      <div class="fg"><label>Script (Código) *</label><textarea id="mCode" placeholder="Cole o script aqui..."></textarea></div>
+      <button class="btn-submit" onclick="submitPost()"><i class="fas fa-paper-plane"></i> Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">⚡ Script<span class="acc">Drop</span></div>
+    <p>© 2025 ScriptDrop — Feito com 💜 pela comunidade</p>
+    <div class="footer-links">
+      <a href="./">Home</a>
+      <a href="#scripts">Scripts</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
