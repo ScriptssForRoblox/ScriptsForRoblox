@@ -258,22 +258,71 @@ async function renderComments(postId) {
     }
   }
 
-  el.innerHTML = comments.map(c => {
+  el.innerHTML = comments.map((c, i) => {
     const u = userCache[c.author] || {};
     const av = u.avatarURL
       ? `<img src='${u.avatarURL}' style='width:100%;height:100%;object-fit:cover;border-radius:50%'>`
       : c.author.charAt(0).toUpperCase();
-    return `<div class="comment-item">
-      <div class="comment-av" style="background:${u.avatarColor||'#7c6af7'}">${av}</div>
-      <div class="comment-body">
-        <div class="comment-author"><a href="profile?user=${encodeURIComponent(c.author)}">${escapeHtml(c.author)}</a><span class="comment-time">${timeAgo(c.ts)}</span></div>
+    const { html: nameHtml } = renderUsername(u);
+    const reactPath = `post_${postId}_comment_${i}`;
+    return `<div class="comment-item" id="ci-${i}">
+      <a href="profile?user=${encodeURIComponent(c.author)}">
+        <div class="comment-av" style="background:${u.avatarColor||'#7c6af7'}">${av}</div>
+      </a>
+      <div class="comment-body" style="flex:1">
+        <div class="comment-author">
+          <a href="profile?user=${encodeURIComponent(c.author)}">${nameHtml}</a>
+          <span class="comment-time">${timeAgo(c.ts)}</span>
+        </div>
         <div class="comment-text">${escapeHtml(c.text)}</div>
+        ${reactionsHtml(reactPath)}
       </div>
     </div>`;
   }).join('');
+
+  comments.forEach((c, i) => loadReactions(`post_${postId}_comment_${i}`));
+  startRgbUsernames();
 }
 
-// ---- Moderation ----
+// ---- Reactions ----
+const REACTIONS = ['❤️','🔥','😂','😍','👏','💀','🤯','⚡','🎉','💜'];
+
+async function toggleReaction(path, emoji) {
+  if (!_currentUser) return showNotification('Faça login para reagir!', 'error');
+  const uid = getUID();
+  const key = `reactions/${path}/${encodeURIComponent(emoji)}/${uid}`;
+  const exists = await DB.get(key);
+  if (exists) await DB.remove(key);
+  else await DB.set(key, true);
+  renderReactions(path, document.getElementById('reactions-' + path.replace(/\//g,'_')));
+}
+
+async function renderReactions(path, container) {
+  if (!container) return;
+  const data = await DB.get(`reactions/${path}`) || {};
+  const uid = getUID();
+  container.innerHTML = REACTIONS.map(emoji => {
+    const users = data[encodeURIComponent(emoji)] || {};
+    const count = Object.keys(users).length;
+    const mine = uid && users[uid];
+    return `<button onclick="toggleReaction('${path}','${emoji}')" 
+      style="background:${mine?'rgba(124,106,247,.25)':'rgba(255,255,255,.04)'};border:1px solid ${mine?'rgba(124,106,247,.5)':'rgba(255,255,255,.08)'};border-radius:20px;padding:4px 10px;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;color:#fff"
+      onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform='scale(1)'">
+      ${emoji}${count > 0 ? `<span style="font-size:.72rem;color:${mine?'#b0a3ff':'#888'};font-weight:700">${count}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+
+function reactionsHtml(path) {
+  const safeId = path.replace(/\//g,'_');
+  return `<div id="reactions-${safeId}" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px"></div>`;
+}
+
+async function loadReactions(path) {
+  const safeId = path.replace(/\//g,'_');
+  const container = document.getElementById('reactions-' + safeId);
+  if (container) renderReactions(path, container);
+}
 async function verifyUser(targetUID) {
   if (getSession() !== 'Alex') return;
   const user = await DB.get(`users/${targetUID}`);
@@ -365,7 +414,7 @@ async function liveSearch(q) {
   ]);
 
   const posts = postsData ? Object.values(postsData).filter(p => (p.title+(p.game||'')).toLowerCase().includes(ql)).slice(0,4) : [];
-  const users = usersData ? Object.values(usersData).filter(u => u.username?.toLowerCase().includes(ql)).slice(0,3) : [];
+  const users = usersData ? Object.values(usersData).filter(u => u.username?.toLowerCase().includes(ql)).slice(0,4) : [];
 
   if (!posts.length && !users.length) { box.classList.remove('open'); return; }
 
@@ -373,23 +422,39 @@ async function liveSearch(q) {
   if (users.length) {
     html += '<div class="gsr-section">Usuários</div>';
     html += users.map(u => {
-      const av = u.avatarURL ? `<img src='${u.avatarURL}'>` : u.username.charAt(0).toUpperCase();
-      return `<div class="gsr-item" onclick="location.href='profile?user=${encodeURIComponent(u.username)}'">
+      const av = u.avatarURL
+        ? `<img src='${u.avatarURL}' style='width:100%;height:100%;object-fit:cover;border-radius:50%'>`
+        : `<span style='font-weight:800;font-size:.85rem'>${u.username.charAt(0).toUpperCase()}</span>`;
+      const isAlex = u.id === '937937001112555531';
+      const nameStyle = isAlex ? 'class="rgb-username" style="font-weight:700"' : `style="font-weight:700;color:${u.nameColor||'#fff'}"` ;
+      const badges = [];
+      if (isAlex) badges.push('\u26a1');
+      if (u.isVerified) badges.push('\u2705');
+      (u.badges||[]).slice(0,2).forEach(b => {
+        const isImg = b.icon&&(b.icon.startsWith('http')||b.icon.startsWith('data'));
+        badges.push(isImg ? `<img src="${b.icon}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;vertical-align:middle">` : b.icon);
+      });
+      return `<a class="gsr-item" href="profile?user=${encodeURIComponent(u.username)}" style="text-decoration:none">
         <div class="gsr-av" style="background:${u.avatarColor||'#7c6af7'}">${av}</div>
-        <div><div class="gsr-name">${escapeHtml(u.username)}</div><div class="gsr-sub">${(u.following||[]).length} seguindo</div></div>
-      </div>`;
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:5px"><span ${nameStyle}>${escapeHtml(u.username)}</span>${badges.join(' ')}</div>
+          <div class="gsr-sub">${escapeHtml(u.bio||'Sem bio')} &middot; ${(u.following||[]).length} seguindo</div>
+        </div>
+        <div style="font-size:.72rem;color:#555;flex-shrink:0">Ver perfil →</div>
+      </a>`;
     }).join('');
   }
   if (posts.length) {
     html += '<div class="gsr-section">Scripts</div>';
-    html += posts.map(p => `<div class="gsr-item" onclick="location.href='script?id=${p.id}'">
-      <div class="gsr-av" style="background:#1a1a1a">${SD.icon('code',14)}</div>
+    html += posts.map(p => `<a class="gsr-item" href="script?id=${p.id}" style="text-decoration:none">
+      <div class="gsr-av" style="background:#1a1a1a;overflow:hidden">${p.image?`<img src="${escapeHtml(p.image)}" style="width:100%;height:100%;object-fit:cover">`:SD.icon('code',14)}</div>
       <div><div class="gsr-name">${escapeHtml(p.title)}</div><div class="gsr-sub">${escapeHtml(p.author)} · ${escapeHtml(p.game||'Universal')}</div></div>
-    </div>`).join('');
+    </a>`).join('');
   }
 
   box.innerHTML = html;
   box.classList.add('open');
+  startRgbUsernames();
   document.addEventListener('click', () => box.classList.remove('open'), { once: true });
 }
 
@@ -407,17 +472,49 @@ async function renderFeed() {
 
   if (!posts.length) { grid.innerHTML = '<p class="feed-empty">Nenhum script encontrado.</p>'; return; }
 
+  // Busca dados dos autores para mostrar pfp/badges/cor
+  const usersData = await DB.get('users') || {};
+  const usernameMap = await DB.get('usernames') || {};
+  const userCache = {};
+  for (const p of posts) {
+    if (p.author && !userCache[p.author]) {
+      const uid = usernameMap[p.author.toLowerCase()];
+      if (uid && usersData[uid]) userCache[p.author] = usersData[uid];
+    }
+  }
+
   grid.innerHTML = posts.map(p => {
+    const u = userCache[p.author] || {};
+    const isAlex = u.id === '937937001112555531';
+    const av = u.avatarURL
+      ? `<img src="${escapeHtml(u.avatarURL)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      : (p.author||'?').charAt(0).toUpperCase();
+    const badges = [];
+    if (isAlex) badges.push('<span style="font-size:.8rem">⚡</span>');
+    if (u.isVerified) badges.push('<span style="font-size:.8rem">✅</span>');
+    (u.badges||[]).slice(0,2).forEach(b => {
+      const isImg = b.icon && (b.icon.startsWith('http')||b.icon.startsWith('data'));
+      badges.push(isImg ? `<img src="${b.icon}" style="width:13px;height:13px;object-fit:cover;border-radius:2px;vertical-align:middle">` : `<span style="font-size:.75rem">${b.icon}</span>`);
+    });
+    const nameStyle = isAlex ? 'class="rgb-username" style="font-weight:700;font-size:.78rem"' : `style="font-weight:700;font-size:.78rem;color:${u.nameColor||'#ccc'}"` ;
     const img = p.image
       ? `<div class="pc-img"><img src="${escapeHtml(p.image)}" onerror="this.parentElement.classList.add('pc-img-err')"/></div>`
       : `<div class="pc-img pc-img-placeholder">${SD.icon('code',32)}</div>`;
     return `<a class="post-card" href="script?id=${p.id}">
-      <div class="pc-top"><span class="pc-time">${SD.icon('recent',13)} ${timeAgo(p.ts)||p.date}</span><span class="pc-author">@${escapeHtml(p.author||'anon')}</span></div>
+      <div class="pc-top">
+        <span class="pc-time">${SD.icon('recent',13)} ${timeAgo(p.ts)||p.date}</span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:18px;height:18px;border-radius:50%;background:${u.avatarColor||'#7c6af7'};display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;overflow:hidden;flex-shrink:0">${av}</span>
+          <span ${nameStyle}>@${escapeHtml(p.author||'anon')}</span>
+          ${badges.join('')}
+        </span>
+      </div>
       ${img}
       <div class="pc-bottom"><div class="pc-title">${escapeHtml(p.title)}</div><div class="pc-game">${SD.icon('gamepad',13)} ${escapeHtml(p.game||'Universal')}</div></div>
     </a>`;
   }).join('');
 
+  startRgbUsernames();
   renderRecent(posts);
   renderTagCloud(posts);
 }
@@ -452,12 +549,37 @@ async function updateStats() {
   ['statVisits','sideStatVisits'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=visits; });
 }
 
-// ---- RGB Owner ----
-function startRgbName() {
-  const el = document.getElementById('navName');
-  if (!el) return;
+// ---- Helper: renderiza nome com cor/RGB + badges ----
+function renderUsername(u, size = '.88rem') {
+  const isAlex = u.id === '937937001112555531' || u.username?.toLowerCase() === 'alex';
+  const nameStyle = isAlex
+    ? `font-size:${size};font-weight:800;` // RGB via JS depois
+    : `font-size:${size};font-weight:800;color:${u.nameColor||'#fff'}`;
+  const nameId = isAlex ? `rgb-name-${Math.random().toString(36).slice(2,7)}` : '';
+  const nameEl = `<span ${nameId ? `id="${nameId}" class="rgb-username"` : ''} style="${nameStyle}">${escapeHtml(u.username)}</span>`;
+
+  const badges = [];
+  if (isAlex) badges.push('<span title="Owner" style="font-size:1rem">⚡</span>');
+  if (u.isVerified) badges.push('<span title="Verificado" style="font-size:.9rem">✅</span>');
+  (u.badges||[]).forEach(b => {
+    const isImg = b.icon && (b.icon.startsWith('http') || b.icon.startsWith('data'));
+    badges.push(isImg
+      ? `<img src="${b.icon}" title="${escapeHtml(b.desc)}" style="width:16px;height:16px;object-fit:cover;border-radius:3px;vertical-align:middle">`
+      : `<span title="${escapeHtml(b.desc)}" style="font-size:.9rem">${b.icon}</span>`);
+  });
+
+  return { html: nameEl + (badges.length ? ' ' + badges.join('') : ''), nameId };
+}
+
+// Inicia RGB em todos os elementos com classe rgb-username
+function startRgbUsernames() {
   let h = 0;
-  setInterval(() => { h=(h+2)%360; el.style.color=`hsl(${h},100%,65%)`; }, 30);
+  setInterval(() => {
+    h = (h + 2) % 360;
+    document.querySelectorAll('.rgb-username').forEach(el => {
+      el.style.color = `hsl(${h},100%,65%)`;
+    });
+  }, 30);
 }
 
 // ---- Navbar ----
@@ -475,7 +597,11 @@ function initNavbar() {
     const navAvatar = document.getElementById('navAvatar');
     const navAdmin  = document.getElementById('navAdminBtn');
 
-    if (navName) navName.textContent = _currentUser.username;
+    if (navName) {
+      navName.textContent = _currentUser.username;
+      if (_currentUser.id === '937937001112555531') navName.classList.add('rgb-username');
+      else navName.style.color = _currentUser.nameColor || '#fff';
+    }
     if (navAdmin && _currentUser.id === '937937001112555531') navAdmin.style.display = 'flex';
     if (navAvatar) {
       if (_currentUser.avatarURL) {
@@ -485,7 +611,7 @@ function initNavbar() {
         navAvatar.style.background = _currentUser.avatarColor || '#7c6af7';
       }
     }
-    if (_currentUser.id === '937937001112555531') startRgbName();
+    startRgbUsernames();
     renderNotifPanel();
 
     // Corrige link do perfil na navbar

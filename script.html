@@ -82,8 +82,12 @@ async function loadScript() {
   const post = await DB.get('posts/' + id);
   if (!post) { wrap.innerHTML = '<div class="sp-err"><i class="fas fa-exclamation-triangle"></i><h2>Script não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>'; return; }
 
-  // Incrementa views
-  await DB.update('posts/' + id, { views: (post.views || 0) + 1 });
+  // Views: conta só 1 por sessão por script
+  const viewKey = 'viewed_' + id;
+  if (!sessionStorage.getItem(viewKey)) {
+    sessionStorage.setItem(viewKey, '1');
+    await DB.update('posts/' + id, { views: (post.views || 0) + 1 });
+  }
 
   // Busca autor
   const authorUID = await DB.get('usernames/' + (post.author || '').toLowerCase());
@@ -102,7 +106,21 @@ async function loadScript() {
   const isFollowing = (_currentUser?.following || []).includes(post.author);
   const followBtn = !isOwn && _currentUser ? `<button class="btn-follow ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${esc(post.author)}')"><i class="fas ${isFollowing ? 'fa-user-check' : 'fa-user-plus'}"></i> ${isFollowing ? 'Seguindo' : 'Seguir'}</button>` : '';
 
+  const isAlex = author.id === '937937001112555531';
   const avContent = author.avatarURL ? `<img src='${author.avatarURL}' style='width:100%;height:100%;object-fit:cover'>` : (post.author || '?').charAt(0).toUpperCase();
+
+  // Badges do autor
+  const authorBadges = [];
+  if (isAlex) authorBadges.push('<span title="Owner" style="font-size:1.1rem">⚡</span>');
+  if (author.isVerified) authorBadges.push('<span title="Verificado" style="font-size:1rem">✅</span>');
+  (author.badges||[]).forEach(b => {
+    const isImg = b.icon && (b.icon.startsWith('http')||b.icon.startsWith('data'));
+    authorBadges.push(isImg
+      ? `<img src="${esc(b.icon)}" title="${esc(b.desc)}" style="width:18px;height:18px;object-fit:cover;border-radius:4px;vertical-align:middle">`
+      : `<span title="${esc(b.desc)}" style="font-size:1rem">${b.icon}</span>`);
+  });
+  const authorNameStyle = isAlex ? 'class="rgb-username" style="font-weight:800;font-size:1.05rem"' : `style="font-weight:800;font-size:1.05rem;color:${author.nameColor||'#fff'}"`;
+  const authorNameHtml = `<span ${authorNameStyle}>${esc(post.author)}</span>${authorBadges.length ? ' <span style="display:inline-flex;align-items:center;gap:4px">' + authorBadges.join('') + '</span>' : ''}`;
 
   // Mais scripts
   const allPosts = await DB.get('posts') || {};
@@ -111,74 +129,135 @@ async function loadScript() {
   wrap.innerHTML = `
   <div class="sp-hero" ${author.banner ? `style="background-image:url('${author.banner}');background-size:cover;background-position:center"` : ''}></div>
   <div class="sp-content">
+
+    <!-- MAIN -->
     <div class="sp-main">
-      ${imgHtml}
+      ${post.image ? `<div class="sp-cover"><img src="${esc(post.image)}" onerror="this.parentElement.style.display='none'"></div>` : ''}
+
       <div class="sp-header">
-        <div class="sp-title-area">
-          <h1 class="sp-title">${esc(post.title)} ${post.isVerifiedPost ? '<span style="color:#1e90ff">✅</span>' : ''}</h1>
+        <div style="flex:1;min-width:0">
+          <h1 class="sp-title">${esc(post.title)}${post.isVerifiedPost ? ' <span style="color:#1e90ff;font-size:1.2rem">✅</span>' : ''}</h1>
           <div class="sp-meta">
-            <span><i class="fas fa-gamepad"></i> ${esc(post.game || 'Universal')}</span>
-            <span><i class="fas fa-eye"></i> ${(post.views || 0) + 1} views</span>
-            <span><i class="fas fa-calendar"></i> ${post.date || ''}</span>
-            <span><i class="fas fa-user"></i> <a href="profile?user=${encodeURIComponent(post.author)}" style="color:#7c6af7">${esc(post.author)}</a></span>
+            <span class="sp-meta-chip"><i class="fas fa-gamepad"></i>${post.gameLink ? `<a href="${esc(post.gameLink)}" target="_blank" style="color:#7c6af7">${esc(post.game||'Universal')}</a>` : esc(post.game||'Universal')}</span>
+            <span class="sp-meta-chip"><i class="fas fa-eye"></i>${(post.views||0)+1} views</span>
+            <span class="sp-meta-chip"><i class="fas fa-calendar"></i>${post.date||''}</span>
+            <span class="sp-meta-chip"><i class="fas fa-user"></i><a href="profile?user=${encodeURIComponent(post.author)}" style="display:inline-flex;align-items:center;gap:4px">${authorNameHtml}</a></span>
           </div>
-          <div class="sp-tags">${tagsHtml}</div>
+          ${tagsHtml ? `<div class="sp-tags">${tagsHtml}</div>` : ''}
         </div>
         <div class="sp-actions">
-          <button class="btn-copy-big" id="copyBtn" onclick="copyScriptPage('${id}')"><i class="fas fa-copy"></i> Copiar Script</button>
+          <button class="btn-copy-big" id="copyBtn" onclick="copyScriptPage('${id}')">
+            <i class="fas fa-copy"></i> Copiar Script
+          </button>
           <a href="raw?id=${id}" class="btn-raw" target="_blank"><i class="fas fa-file-code"></i> Raw</a>
         </div>
       </div>
-      ${post.desc ? `<div class="sp-desc"><h3><i class="fas fa-info-circle"></i> Descrição</h3><p>${esc(post.desc)}</p></div>` : ''}
+
+      ${post.desc ? `
+      <div style="padding:0 28px 20px">
+        <div class="sp-desc">
+          <div class="sp-desc-title"><i class="fas fa-align-left"></i> Descrição</div>
+          <p>${esc(post.desc)}</p>
+        </div>
+      </div>` : ''}
+
       <div class="sp-code-block">
         <div class="sp-code-bar">
-          <span><i class="fas fa-code"></i> Script</span>
-          <button onclick="copyScriptPage('${id}')" id="copyBtn2"><i class="fas fa-copy"></i> Copiar</button>
+          <div class="sp-code-bar-left">
+            <div class="sp-code-dots"><span></span><span></span><span></span></div>
+            <span class="sp-code-lang">Lua / Script</span>
+          </div>
+          <div class="sp-code-bar-right">
+            <button class="btn-copy-inline" id="copyBtn2" onclick="copyScriptPage('${id}')">
+              <i class="fas fa-copy"></i> Copiar
+            </button>
+          </div>
         </div>
         <pre class="sp-code">${esc(post.code)}</pre>
       </div>
+
+      <!-- Reações do script -->
+      <div style="padding:16px 28px;border-top:1px solid #1a1a1a">
+        <div style="font-size:.72rem;color:#555;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Reações</div>
+        ${reactionsHtml('script_' + id)}
+      </div>
+
       <div class="comment-section">
-        <h3 style="margin-bottom:20px"><i class="fas fa-comments" style="color:#7c6af7"></i> Comentários</h3>
+        <div class="comment-section-title">
+          <i class="fas fa-comments" style="color:#7c6af7"></i> Comentários
+        </div>
         <div class="comment-input-wrap">
           <input type="text" id="cInput" placeholder="Escreva um comentário..." onkeydown="if(event.key==='Enter')addComment('${id}')">
-          <button class="btn-send" onclick="addComment('${id}')">Enviar</button>
+          <button class="btn-send" onclick="addComment('${id}')"><i class="fas fa-paper-plane"></i></button>
         </div>
         <div id="commentList"></div>
       </div>
     </div>
+
+    <!-- SIDEBAR -->
     <aside class="sp-sidebar">
+
+      <!-- Stats -->
+      <div class="sp-stats-card">
+        <div class="sp-stat">
+          <div class="sp-stat-num">${(post.views||0)+1}</div>
+          <div class="sp-stat-label">Views</div>
+        </div>
+        <div class="sp-stat">
+          <div class="sp-stat-num">${(post.tags||[]).length}</div>
+          <div class="sp-stat-label">Tags</div>
+        </div>
+      </div>
+
+      <!-- Autor -->
       <div class="sp-author-card">
-        <div class="sp-author-banner" ${author.banner ? `style="background-image:url('${author.banner}');background-size:cover"` : ''}></div>
+        <div class="sp-author-banner" ${author.banner ? `style="background-image:url('${author.banner}');background-size:cover;background-position:center"` : ''}></div>
         <div class="sp-author-body">
-          <div class="sp-author-av" style="background:${author.avatarColor || '#7c6af7'}">${avContent}</div>
-          <div class="sp-author-name">${esc(post.author)}</div>
-          <div class="sp-author-bio">${esc(author.bio || 'Sem bio.')}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px">
-            <a href="profile?user=${encodeURIComponent(post.author)}" class="btn-view-profile">Ver Perfil</a>
-            ${followBtn}
+          <div class="sp-author-av" style="background:${author.avatarColor||'#7c6af7'}">${avContent}</div>
+          <div class="sp-author-name" style="margin-bottom:6px">${authorNameHtml}</div>
+          <div class="sp-author-bio">${esc(author.bio||'Sem bio.')}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <a href="profile?user=${encodeURIComponent(post.author)}" class="btn-view-profile"><i class="fas fa-user"></i> Ver Perfil</a>
+            ${followBtn ? `<div>${followBtn}</div>` : ''}
           </div>
         </div>
       </div>
+
+      <!-- Mais scripts -->
       <div class="sp-more-card">
-        <div class="sc-title"><i class="fas fa-layer-group" style="color:#7c6af7"></i> Mais Scripts</div>
-        <div id="moreScripts">${morePosts.length
-          ? morePosts.map(p => `<a href="script?id=${p.id}" class="more-item"><div class="more-title">${esc(p.title)}</div><div class="more-meta">${esc(p.author)} · ${esc(p.game || 'Universal')}</div></a>`).join('')
+        <div class="sc-title" style="margin-bottom:12px"><i class="fas fa-layer-group" style="color:#7c6af7"></i> Mais Scripts</div>
+        <div>${morePosts.length
+          ? morePosts.map(p => `
+            <a href="script?id=${p.id}" class="more-item">
+              <div class="more-item-icon">${p.image ? `<img src="${esc(p.image)}" onerror="this.style.display='none'">` : '<i class="fas fa-code"></i>'}</div>
+              <div style="min-width:0">
+                <div class="more-title">${esc(p.title)}</div>
+                <div class="more-meta">${esc(p.author)} · ${esc(p.game||'Universal')}</div>
+              </div>
+            </a>`).join('')
           : '<p style="color:#555;font-size:.85rem">Nenhum outro script.</p>'
         }</div>
       </div>
+
     </aside>
   </div>`;
 
   renderComments(id);
+  loadReactions('script_' + id);
+  startRgbUsernames();
 }
 
 function copyScriptPage(id) {
   DB.get('posts/' + id).then(post => {
     if (!post) return;
     navigator.clipboard.writeText(post.code).then(() => {
-      ['copyBtn','copyBtn2'].forEach(bid => {
+      [['copyBtn','<i class="fas fa-copy"></i> Copiar Script'],['copyBtn2','<i class="fas fa-copy"></i> Copiar']].forEach(([bid, orig]) => {
         const b = document.getElementById(bid);
-        if (b) { b.innerHTML = '<i class="fas fa-check"></i> Copiado!'; b.classList.add('copied'); setTimeout(() => { b.innerHTML = '<i class="fas fa-copy"></i> Copiar Script'; b.classList.remove('copied'); }, 2000); }
+        if (b) {
+          b.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+          b.classList.add('copied');
+          setTimeout(() => { b.innerHTML = orig; b.classList.remove('copied'); }, 2000);
+        }
       });
       showNotification('Script copiado!');
     });

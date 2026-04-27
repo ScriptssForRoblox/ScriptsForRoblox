@@ -112,7 +112,14 @@
             <input id="pGame" placeholder="Ex: Blox Fruits, Universal..." oninput="updatePreview()"/>
           </div>
           <div class="fg">
-            <label><i class="fas fa-image"></i> Imagem de Capa <span style="color:#444;font-size:.75rem">(URL)</span></label>
+            <label><i class="fab fa-roblox" style="color:#ff4444"></i> Link do Jogo Roblox <span style="color:#444;font-size:.75rem">(opcional — preenche automático)</span></label>
+            <div style="display:flex;gap:8px">
+              <input id="pGameLink" placeholder="https://www.roblox.com/games/..." style="flex:1" oninput="debounceRoblox(this.value)"/>
+              <div id="robloxStatus" style="width:36px;height:46px;display:flex;align-items:center;justify-content:center;color:#555;font-size:.9rem;flex-shrink:0"></div>
+            </div>
+          </div>
+          <div class="fg">
+            <label><i class="fas fa-image"></i> Imagem de Capa <span style="color:#444;font-size:.75rem">(URL ou auto do Roblox)</span></label>
             <input id="pImage" placeholder="https://..." oninput="updatePreview()"/>
           </div>
           <div class="fg fg-full">
@@ -182,6 +189,52 @@
 
 <script src="app.js"></script>
 <script>
+// ---- Roblox Auto-fill ----
+let _robloxDebounce = null;
+function debounceRoblox(val) {
+  clearTimeout(_robloxDebounce);
+  const status = document.getElementById('robloxStatus');
+  if (!val.includes('roblox.com/games/')) { status.innerHTML = ''; return; }
+  status.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#555"></i>';
+  _robloxDebounce = setTimeout(() => fetchRobloxGame(val), 700);
+}
+
+async function fetchRobloxGame(url) {
+  const status = document.getElementById('robloxStatus');
+  try {
+    // Extrai o Place ID da URL
+    const match = url.match(/\/games\/(\d+)/);
+    if (!match) { status.innerHTML = '<i class="fas fa-times" style="color:#ff4757"></i>'; return; }
+    const placeId = match[1];
+
+    // Busca universeId pelo placeId
+    const uniRes = await fetch(`https://corsproxy.io/?https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
+    const uniData = await uniRes.json();
+    const universeId = uniData.universeId;
+    if (!universeId) { status.innerHTML = '<i class="fas fa-times" style="color:#ff4757"></i>'; return; }
+
+    // Busca detalhes do jogo
+    const gameRes = await fetch(`https://corsproxy.io/?https://games.roblox.com/v1/games?universeIds=${universeId}`);
+    const gameData = await gameRes.json();
+    const game = gameData.data?.[0];
+    if (!game) { status.innerHTML = '<i class="fas fa-times" style="color:#ff4757"></i>'; return; }
+
+    // Busca thumbnail
+    const thumbRes = await fetch(`https://corsproxy.io/?https://thumbnails.roblox.com/v1/games/icons?universeIds=${universeId}&size=512x512&format=Png`);
+    const thumbData = await thumbRes.json();
+    const thumb = thumbData.data?.[0]?.imageUrl || '';
+
+    // Preenche os campos
+    document.getElementById('pGame').value = game.name;
+    if (thumb) document.getElementById('pImage').value = thumb;
+    updatePreview();
+    status.innerHTML = '<i class="fas fa-check" style="color:#00d4aa"></i>';
+    showNotification('Jogo encontrado: ' + game.name);
+  } catch(e) {
+    status.innerHTML = '<i class="fas fa-times" style="color:#ff4757"></i>';
+  }
+}
+
 const tags = [];
 
 function handleTagInput(e) {
@@ -246,6 +299,7 @@ async function publishScript() {
   const game  = document.getElementById('pGame').value.trim();
   const image = document.getElementById('pImage').value.trim();
   const desc  = document.getElementById('pDesc').value.trim();
+  const gameLink = document.getElementById('pGameLink').value.trim();
   const btn   = document.getElementById('publishBtn');
 
   if (!_currentUser) return showNotification('Faça login para postar!', 'error');
@@ -260,7 +314,7 @@ async function publishScript() {
   try {
     const postId = Date.now().toString();
     await DB.set('posts/' + postId, {
-      id: postId, title, code, game, image, desc, tags,
+      id: postId, title, code, game, image, desc, tags, gameLink,
       author: _currentUser.username,
       authorUID: _currentUser.uid,
       date: new Date().toLocaleDateString('pt-BR'),

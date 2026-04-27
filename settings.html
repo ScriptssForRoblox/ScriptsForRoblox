@@ -114,13 +114,26 @@
 
         <!-- Música -->
         <div class="fg">
-          <label><i class="fas fa-music"></i> Música do Perfil <span style="color:#555;font-size:0.75rem">(máx 10MB)</span></label>
-          <div style="display:flex;gap:10px;align-items:center">
-            <div id="musicPreviewBox" style="flex:1;background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px;color:#555;font-size:0.85rem">
-              <i class="fas fa-music"></i> <span id="musicFileName">Nenhuma música</span>
-            </div>
+          <label><i class="fas fa-music"></i> Música do Perfil</label>
+          <!-- Música selecionada -->
+          <div id="musicPreviewBox" style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;color:#555;font-size:0.85rem;margin-bottom:8px">
+            <i class="fas fa-music"></i> <span id="musicFileName">Nenhuma música selecionada</span>
+          </div>
+          <!-- Upload próprio -->
+          <div style="display:flex;gap:8px;margin-bottom:10px">
             <input type="file" id="fileMusic" class="hidden-file" accept="audio/*">
-            <button class="btn-file" onclick="document.getElementById('fileMusic').click()"><i class="fas fa-upload"></i></button>
+            <button class="btn-file" style="flex:1" onclick="document.getElementById('fileMusic').click()"><i class="fas fa-upload"></i> Enviar arquivo (.mp3)</button>
+          </div>
+          <!-- Busca de músicas via Deezer -->
+          <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;overflow:hidden">
+            <div style="padding:10px 14px;border-bottom:1px solid #222;display:flex;align-items:center;gap:8px">
+              <i class="fas fa-search" style="color:#555;font-size:.85rem"></i>
+              <input id="musicSearch" placeholder="Buscar qualquer música... (ex: Eminem, Funk, Phonk)" style="background:none;border:none;outline:none;color:#fff;font-size:.85rem;flex:1" oninput="debounceMusicSearch(this.value)"/>
+              <span style="font-size:.7rem;color:#333;flex-shrink:0">via Deezer</span>
+            </div>
+            <div id="musicList" style="max-height:300px;overflow-y:auto">
+              <div style="padding:20px;text-align:center;color:#444;font-size:.85rem"><i class="fas fa-music" style="margin-right:6px"></i>Digite para buscar músicas</div>
+            </div>
           </div>
         </div>
 
@@ -192,16 +205,22 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
           <div class="fg" style="flex:1;min-width:140px"><label>Nome/Descrição</label><input id="newBadgeDesc" placeholder="Ex: Verificado"/></div>
           <div class="fg" style="flex:1;min-width:140px">
-            <label>Ícone (emoji ou URL)</label>
+            <label>Ícone (emoji ou URL ou GIF)</label>
             <div style="display:flex;gap:6px">
-              <input id="newBadgeIcon" placeholder="✅ ou URL" style="flex:1"/>
+              <input id="newBadgeIcon" placeholder="✅ ou URL" style="flex:1" oninput="previewNewBadgeInput()"/>
               <input type="file" id="newBadgeFile" accept="image/*,image/gif" style="display:none" onchange="previewNewBadge(this)">
-              <button class="btn-file" onclick="document.getElementById('newBadgeFile').click()"><i class="fas fa-image"></i></button>
+              <button class="btn-file" onclick="document.getElementById('newBadgeFile').click()" title="Upload imagem/GIF"><i class="fas fa-image"></i></button>
             </div>
           </div>
           <div id="newBadgePreview" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#1a1a1a;border-radius:8px;border:1px solid #333;font-size:1.4rem"></div>
           <button class="btn-submit" style="height:42px;padding:0 20px" onclick="createGlobalBadge()"><i class="fas fa-save"></i> Criar</button>
         </div>
+      </div>
+
+      <!-- Biblioteca de Badges -->
+      <div class="settings-card" style="border-color:rgba(255,215,0,0.2)">
+        <div class="admin-section-title" style="font-size:1rem;margin-bottom:15px"><i class="fas fa-layer-group" style="color:#ffd700"></i> Biblioteca de Badges <span id="badgeLibCount" style="color:#555;font-size:.8rem;font-weight:400"></span></div>
+        <div id="badgeLibList" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
 
       <!-- Busca -->
@@ -226,42 +245,69 @@
   </div>
 </div>
 
-<!-- Modal Add Badge -->
-<div id="addBadgeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:3000;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#161616;border:1px solid #333;border-radius:16px;padding:30px;width:100%;max-width:420px">
+<!-- Modal Add Badge para usuário -->
+<div id="addBadgeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:3000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#161616;border:1px solid #333;border-radius:16px;padding:30px;width:100%;max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h3 style="color:#fff"><i class="fas fa-medal" style="color:#7c6af7"></i> Adicionar Badge</h3>
+      <h3 style="color:#fff"><i class="fas fa-medal" style="color:#7c6af7"></i> Dar Badge ao Usuário</h3>
       <button onclick="closeAddBadge()" style="background:none;color:#555;font-size:1.2rem"><i class="fas fa-times"></i></button>
     </div>
-    <div class="fg"><label>Descrição</label><input id="addBadgeDesc" placeholder="Ex: Verificado, Early Adopter..."/></div>
-    <div class="fg"><label>Ícone (emoji ou URL de imagem)</label><input id="addBadgeIcon" placeholder="✅ ou https://..."/></div>
-    <button class="btn-submit" onclick="confirmAddBadge()"><i class="fas fa-plus"></i> Adicionar</button>
+    <!-- Badges da biblioteca -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:.75rem;color:#555;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Selecionar da Biblioteca</div>
+      <div id="badgePickerList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+    <div style="border-top:1px solid #222;padding-top:16px;margin-bottom:16px">
+      <div style="font-size:.75rem;color:#555;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Ou criar badge personalizada</div>
+      <div class="fg" style="margin-bottom:10px"><label>Descrição</label><input id="addBadgeDesc" placeholder="Ex: Early Adopter"/></div>
+      <div class="fg" style="margin-bottom:0"><label>Ícone (emoji ou URL)</label><input id="addBadgeIcon" placeholder="⭐ ou https://..."/></div>
+    </div>
+    <button class="btn-submit" onclick="confirmAddBadge()"><i class="fas fa-plus"></i> Adicionar Badge</button>
+  </div>
+</div>
+
+<!-- Modal Editar Badge Global -->
+<div id="editBadgeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:3000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#161616;border:1px solid #333;border-radius:16px;padding:30px;width:100%;max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 style="color:#fff"><i class="fas fa-edit" style="color:#ffd700"></i> Editar Badge</h3>
+      <button onclick="closeEditBadge()" style="background:none;color:#555;font-size:1.2rem"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="fg"><label>Nome / Descrição</label><input id="editBadgeDesc" placeholder="Ex: Verificado"/></div>
+    <div class="fg">
+      <label>Ícone (emoji ou URL de imagem/GIF)</label>
+      <div style="display:flex;gap:8px">
+        <input id="editBadgeIcon" placeholder="✅ ou https://..." style="flex:1" oninput="updateEditBadgePreview()"/>
+        <div id="editBadgePreview" style="width:42px;height:42px;flex-shrink:0;background:#1a1a1a;border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:5px">
+      <button class="btn-submit" style="flex:1" onclick="confirmEditBadge()"><i class="fas fa-save"></i> Salvar</button>
+      <button onclick="confirmDeleteBadge()" style="background:#ff4757;color:#fff;padding:12px 18px;border-radius:10px;font-weight:700;font-size:.9rem"><i class="fas fa-trash"></i></button>
+    </div>
   </div>
 </div>
 
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-logo">⚡ Script<span class="acc">Drop</span></div>
+    <div class="footer-logo">⚡Script<span class="acc">Drop</span></div>
     <p>© 2025 ScriptDrop</p>
   </div>
 </footer>
 
 <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="firebase.js"></script>
 <script src="app.js"></script>
 <script>
 const storage = firebase.storage();
-
-// State
 let currentUserData = null;
-let pendingAvatar = null;
-let pendingBanner = null;
-let pendingMusic = null;
+let pendingAvatar = null, pendingBanner = null, pendingMusic = null;
 let selectedBannerUrl = '';
+let _addBadgeUID = null, _editBadgeKey = null;
 
 function showTab(name, btn){
   document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
@@ -298,11 +344,80 @@ document.getElementById('fileBanner').onchange = (e) => {
 document.getElementById('fileMusic').onchange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) return showNotification('Música máx 10MB', 'error');
   pendingMusic = file;
   document.getElementById('musicFileName').textContent = file.name;
   document.getElementById('musicPreviewBox').style.color = '#7c6af7';
 };
+
+// ---- Deezer Music Search ----
+let _selectedMusicUrl = '';
+let _musicPreviewAudio = null;
+let _musicDebounce = null;
+
+function debounceMusicSearch(q) {
+  clearTimeout(_musicDebounce);
+  if (!q.trim()) {
+    document.getElementById('musicList').innerHTML = '<div style="padding:20px;text-align:center;color:#444;font-size:.85rem"><i class="fas fa-music" style="margin-right:6px"></i>Digite para buscar músicas</div>';
+    return;
+  }
+  document.getElementById('musicList').innerHTML = '<div style="padding:20px;text-align:center;color:#555;font-size:.85rem"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Buscando...</div>';
+  _musicDebounce = setTimeout(() => searchDeezer(q), 500);
+}
+
+async function searchDeezer(q) {
+  const list = document.getElementById('musicList');
+  try {
+    const res = await fetch(`https://corsproxy.io/?https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=30`);
+    const data = await res.json();
+    if (!data.data || !data.data.length) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:#555;font-size:.85rem">Nenhuma música encontrada.</div>';
+      return;
+    }
+    list.innerHTML = data.data.map((t, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #111;transition:background .15s"
+           onmouseenter="this.style.background='#1a1a1a'" onmouseleave="this.style.background='transparent'">
+        <img src="${t.album.cover_small}" style="width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;color:#fff;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.title)}</div>
+          <div style="font-size:.72rem;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.artist.name)} — ${escHtml(t.album.title)}</div>
+        </div>
+        <button onclick="previewDeezer('${t.preview}',${i})" id="dpbtn-${i}"
+                style="background:#222;border:1px solid #333;color:#aaa;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.7rem">
+          <i class="fas fa-play"></i>
+        </button>
+        <button onclick="selectMusic(${JSON.stringify(escHtml(t.title))},${JSON.stringify(escHtml(t.artist.name))},'${t.preview}')"
+                style="background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:#7c6af7;padding:5px 12px;border-radius:6px;font-size:.75rem;font-weight:700;flex-shrink:0">
+          Usar
+        </button>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#ff6b6b;font-size:.85rem"><i class="fas fa-exclamation-triangle" style="margin-right:6px"></i>Erro ao buscar. Tente novamente.</div>';
+  }
+}
+
+let _previewIdx = -1;
+function previewDeezer(url, idx) {
+  if (_musicPreviewAudio) { _musicPreviewAudio.pause(); }
+  const prevBtn = document.getElementById('dpbtn-' + _previewIdx);
+  if (prevBtn) prevBtn.innerHTML = '<i class="fas fa-play"></i>';
+  if (_previewIdx === idx) { _previewIdx = -1; return; }
+  _previewIdx = idx;
+  _musicPreviewAudio = new Audio(url);
+  _musicPreviewAudio.volume = 0.6;
+  _musicPreviewAudio.play();
+  const btn = document.getElementById('dpbtn-' + idx);
+  if (btn) btn.innerHTML = '<i class="fas fa-pause"></i>';
+  _musicPreviewAudio.onended = () => { if (btn) btn.innerHTML = '<i class="fas fa-play"></i>'; _previewIdx = -1; };
+}
+
+function selectMusic(name, artist, url) {
+  _selectedMusicUrl = url;
+  pendingMusic = null;
+  document.getElementById('musicFileName').textContent = name + ' — ' + artist;
+  document.getElementById('musicPreviewBox').style.color = '#7c6af7';
+  if (_musicPreviewAudio) _musicPreviewAudio.pause();
+  showNotification('Música selecionada: ' + name);
+}
 
 function setBannerPreset(url) {
   selectedBannerUrl = url;
@@ -363,6 +478,7 @@ async function loadSettings(firebaseUser) {
   if(data.id === alexId || data.username?.toLowerCase() === 'alex') {
     document.getElementById('adminTabBtn').style.display = 'flex';
     renderAdminUsers();
+    renderBadgeLibrary();
   }
 }
 
@@ -391,13 +507,14 @@ async function saveAccount(){
     if (pendingBanner) updates.banner = await uploadFile(pendingBanner, `banners/${uid}`);
     else if (selectedBannerUrl) updates.banner = selectedBannerUrl;
     if (pendingMusic) updates.profileMusic = await uploadFile(pendingMusic, `music/${uid}`);
+    else if (_selectedMusicUrl) updates.profileMusic = _selectedMusicUrl;
 
     await DB.update('users/' + uid, updates);
     showNotification('Configurações salvas!');
     location.reload();
   } catch (e) {
     console.error(e);
-    showNotification('Erro ao salvar.', 'error');
+    showNotification('Erro ao salvar: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-save"></i> Salvar';
@@ -483,29 +600,6 @@ async function renderAdminUsers() {
   }).join('');
 }
 
-let _addBadgeUID = null;
-function openAddBadge(uid) {
-  _addBadgeUID = uid;
-  document.getElementById('addBadgeModal').style.display = 'flex';
-}
-function closeAddBadge() {
-  document.getElementById('addBadgeModal').style.display = 'none';
-  _addBadgeUID = null;
-}
-async function confirmAddBadge() {
-  if (!_addBadgeUID) return;
-  const desc = document.getElementById('addBadgeDesc').value.trim();
-  const icon = document.getElementById('addBadgeIcon').value.trim();
-  if (!desc || !icon) return showNotification('Preencha desc e ícone.', 'error');
-  const u = await DB.get('users/' + _addBadgeUID);
-  const badges = u.badges || [];
-  badges.push({ desc, icon });
-  await DB.update('users/' + _addBadgeUID, { badges });
-  showNotification('Badge adicionada!');
-  closeAddBadge();
-  renderAdminUsers();
-}
-
 async function adminAction(uid, type, extra) {
   if (type === 'ban')      await DB.update('users/' + uid, { isBanned: true });
   if (type === 'unban')    await DB.update('users/' + uid, { isBanned: false });
@@ -528,7 +622,146 @@ async function createGlobalBadge() {
   await DB.push('globalBadges', { desc, icon, ts: Date.now() });
   document.getElementById('newBadgeDesc').value = '';
   document.getElementById('newBadgeIcon').value = '';
+  document.getElementById('newBadgePreview').innerHTML = '';
   showNotification('Badge global criada!');
+  renderBadgeLibrary();
+}
+
+function previewNewBadge(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('newBadgeIcon').value = e.target.result;
+    document.getElementById('newBadgePreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function previewNewBadgeInput() {
+  const icon = document.getElementById('newBadgeIcon').value.trim();
+  const prev = document.getElementById('newBadgePreview');
+  if (!icon) { prev.innerHTML = ''; return; }
+  const isImg = icon.startsWith('http') || icon.startsWith('data');
+  prev.innerHTML = isImg
+    ? `<img src="${escHtml(icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`
+    : `<span style="font-size:1.4rem">${icon}</span>`;
+}
+
+// ---- Biblioteca de Badges ----
+async function renderBadgeLibrary() {
+  const data = await DB.get('globalBadges') || {};
+  const entries = Object.entries(data).sort((a,b) => (b[1].ts||0) - (a[1].ts||0));
+  const list = document.getElementById('badgeLibList');
+  const count = document.getElementById('badgeLibCount');
+  if (count) count.textContent = `(${entries.length})`;
+
+  if (!entries.length) {
+    list.innerHTML = '<p style="color:#444;font-size:.85rem">Nenhuma badge criada ainda.</p>';
+    return;
+  }
+
+  list.innerHTML = entries.map(([key, b]) => {
+    const isImg = b.icon && (b.icon.startsWith('http') || b.icon.startsWith('data'));
+    const iconHtml = isImg
+      ? `<img src="${escHtml(b.icon)}" style="width:32px;height:32px;object-fit:cover;border-radius:6px">`
+      : `<span style="font-size:1.4rem;line-height:1">${b.icon}</span>`;
+    return `
+    <div style="display:flex;align-items:center;gap:12px;background:#0d0d0d;border:1px solid #222;border-radius:12px;padding:12px 16px">
+      <div style="width:40px;height:40px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${iconHtml}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;color:#fff;font-size:.9rem">${escHtml(b.desc)}</div>
+        <div style="font-size:.72rem;color:#444;margin-top:2px;word-break:break-all">${escHtml(b.icon)}</div>
+      </div>
+      <button onclick="openEditBadge('${key}')" style="background:#222;border:1px solid #333;color:#aaa;padding:7px 12px;border-radius:8px;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:5px">
+        <i class="fas fa-edit"></i> Editar
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ---- Editar Badge Global ----
+async function openEditBadge(key) {
+  _editBadgeKey = key;
+  const b = await DB.get('globalBadges/' + key);
+  if (!b) return;
+  document.getElementById('editBadgeDesc').value = b.desc || '';
+  document.getElementById('editBadgeIcon').value = b.icon || '';
+  updateEditBadgePreview();
+  document.getElementById('editBadgeModal').style.display = 'flex';
+}
+function closeEditBadge() {
+  document.getElementById('editBadgeModal').style.display = 'none';
+  _editBadgeKey = null;
+}
+function updateEditBadgePreview() {
+  const icon = document.getElementById('editBadgeIcon').value.trim();
+  const prev = document.getElementById('editBadgePreview');
+  if (!icon) { prev.innerHTML = ''; return; }
+  const isImg = icon.startsWith('http') || icon.startsWith('data');
+  prev.innerHTML = isImg
+    ? `<img src="${escHtml(icon)}" style="width:100%;height:100%;object-fit:cover">`
+    : `<span style="font-size:1.4rem">${icon}</span>`;
+}
+async function confirmEditBadge() {
+  if (!_editBadgeKey) return;
+  const desc = document.getElementById('editBadgeDesc').value.trim();
+  const icon = document.getElementById('editBadgeIcon').value.trim();
+  if (!desc || !icon) return showNotification('Preencha todos os campos.', 'error');
+  await DB.update('globalBadges/' + _editBadgeKey, { desc, icon });
+  showNotification('Badge atualizada!');
+  closeEditBadge();
+  renderBadgeLibrary();
+}
+async function confirmDeleteBadge() {
+  if (!_editBadgeKey) return;
+  if (!confirm('Deletar esta badge da biblioteca?')) return;
+  await DB.remove('globalBadges/' + _editBadgeKey);
+  showNotification('Badge removida!');
+  closeEditBadge();
+  renderBadgeLibrary();
+}
+
+// ---- Add Badge ao usuário (com picker da biblioteca) ----
+async function openAddBadge(uid) {
+  _addBadgeUID = uid;
+  document.getElementById('addBadgeDesc').value = '';
+  document.getElementById('addBadgeIcon').value = '';
+  // Popula picker com badges da biblioteca
+  const data = await DB.get('globalBadges') || {};
+  const picker = document.getElementById('badgePickerList');
+  const entries = Object.values(data);
+  if (!entries.length) {
+    picker.innerHTML = '<span style="color:#444;font-size:.8rem">Nenhuma badge na biblioteca.</span>';
+  } else {
+    picker.innerHTML = entries.map(b => {
+      const isImg = b.icon && (b.icon.startsWith('http') || b.icon.startsWith('data'));
+      const iconHtml = isImg ? `<img src="${escHtml(b.icon)}" style="width:20px;height:20px;object-fit:cover;border-radius:4px">` : b.icon;
+      return `<button onclick="selectLibBadge('${escHtml(b.desc)}','${escHtml(b.icon)}')" style="display:flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #333;color:#ccc;padding:6px 10px;border-radius:8px;font-size:.8rem;cursor:pointer">${iconHtml} ${escHtml(b.desc)}</button>`;
+    }).join('');
+  }
+  document.getElementById('addBadgeModal').style.display = 'flex';
+}
+function selectLibBadge(desc, icon) {
+  document.getElementById('addBadgeDesc').value = desc;
+  document.getElementById('addBadgeIcon').value = icon;
+}
+function closeAddBadge() {
+  document.getElementById('addBadgeModal').style.display = 'none';
+  _addBadgeUID = null;
+}
+async function confirmAddBadge() {
+  if (!_addBadgeUID) return;
+  const desc = document.getElementById('addBadgeDesc').value.trim();
+  const icon = document.getElementById('addBadgeIcon').value.trim();
+  if (!desc || !icon) return showNotification('Preencha desc e ícone.', 'error');
+  const u = await DB.get('users/' + _addBadgeUID);
+  const badges = u.badges || [];
+  badges.push({ desc, icon });
+  await DB.update('users/' + _addBadgeUID, { badges });
+  showNotification('Badge adicionada!');
+  closeAddBadge();
+  renderAdminUsers();
 }
 
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
