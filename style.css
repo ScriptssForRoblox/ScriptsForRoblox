@@ -558,7 +558,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   gap: 8px;
 }
 
-.btn-reset-warn { background: #2f3542; color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; }
+.btn-reset-warn { background: #2f3542; color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
 .btn-verify { background: #ffd700; color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer; }
 
 .btn-delete-script {
@@ -569,6 +569,10 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   z-index: 10; opacity: 0; transition: 0.3s;
 }
 .script-card:hover .btn-delete-script { opacity: 1; }
+
+.admin-badge-icon { width: 20px; height: 20px; object-fit: contain; }
+
+/* ---- Custom Tooltip System ---- */
 .badge-item {
   position: relative;
   display: flex;

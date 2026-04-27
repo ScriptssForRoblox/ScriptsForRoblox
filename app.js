@@ -1,19 +1,12 @@
 // ---- Helpers ----
-// Nota: Ao usar um banco de dados real, essas funções passarão a usar 'fetch' ou SDKs (Supabase/Firebase)
-function getUsers() { 
-  return JSON.parse(localStorage.getItem('users') || '[]'); 
-}
-
-async function saveUsers(u) { 
-  // No futuro: await supabase.from('users').upsert(u);
-  localStorage.setItem('users', JSON.stringify(u)); 
-}
-
+function getUsers() { return JSON.parse(localStorage.getItem('users') || '[]'); }
+function saveUsers(u) { localStorage.setItem('users', JSON.stringify(u)); }
 function getPosts() { return JSON.parse(localStorage.getItem('posts') || '[]'); }
-async function savePosts(p) { localStorage.setItem('posts', JSON.stringify(p)); }
+function savePosts(p) { localStorage.setItem('posts', JSON.stringify(p)); }
 function getComments() { return JSON.parse(localStorage.getItem('comments') || '[]'); }
-async function saveComments(c) { localStorage.setItem('comments', JSON.stringify(c)); }
-
+function saveComments(c) { localStorage.setItem('comments', JSON.stringify(c)); }
+function getComments() { return JSON.parse(localStorage.getItem('comments') || '[]'); }
+function saveComments(c) { localStorage.setItem('comments', JSON.stringify(c)); }
 function getSession() { return localStorage.getItem('session'); }
 function setSession(u) { localStorage.setItem('session', u); }
 function clearSession() { localStorage.removeItem('session'); }
@@ -63,7 +56,7 @@ function fixOwnerId() {
 }
 
 // ---- Auth ----
-async function register() {
+function register() {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
   const confirm  = document.getElementById('confirm').value;
@@ -85,12 +78,12 @@ async function register() {
     warns: 0,
     timeoutUntil: 0
   });
-  await saveUsers(users);
+  saveUsers(users);
   setSession(username);
   window.location.href = './';
 }
 
-async function login() {
+function login() {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
   const error    = document.getElementById('error');
@@ -103,14 +96,40 @@ async function login() {
   window.location.href = './';
 }
 
-async function verifyUser(userId) {
+function verifyUser(userId) {
   const session = getSession();
   if (session !== 'Alex') return;
   let users = getUsers();
   const idx = users.findIndex(u => u.id === userId);
   if (idx !== -1) {
     users[idx].isVerified = !users[idx].isVerified;
-    await saveUsers(users);
+    saveUsers(users);
+    showNotification(users[idx].isVerified ? "Usuário Verificado!" : "Verificação removida.");
+    location.reload();
+  }
+}
+
+function deletePost(postId) {
+  const session = getSession();
+  let posts = getPosts();
+  const post = posts.find(p => p.id === postId);
+  if (!post) return;
+  if (post.author !== session && session !== 'Alex') return showNotification("Sem permissão!", "error");
+  if (!confirm("Deletar este script para sempre?")) return;
+  posts = posts.filter(p => p.id !== postId);
+  savePosts(posts);
+  showNotification("Script deletado!");
+  location.reload();
+}
+
+function verifyUser(userId) {
+  const session = getSession();
+  if (session !== 'Alex') return;
+  let users = getUsers();
+  const idx = users.findIndex(u => u.id === userId);
+  if (idx !== -1) {
+    users[idx].isVerified = !users[idx].isVerified;
+    saveUsers(users);
     showNotification(users[idx].isVerified ? "Usuário Verificado!" : "Verificação removida.");
     location.reload();
   }
