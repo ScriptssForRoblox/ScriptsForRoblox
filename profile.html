@@ -7,21 +7,24 @@
 
 <!-- Open Graph / Discord Rich Embed -->
 <meta property="og:type" content="profile">
-<meta property="og:site_name" content="ScriptDrop">
-<meta property="og:title" id="og-title" content="Ver Perfil no ScriptDrop">
-<meta property="og:description" id="og-desc" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop.">
-<meta property="og:image" id="og-image" content="https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png">
-<meta property="og:url" id="og-url" content="">
+<meta property="og:site_name" content="⚡ ScriptDrop">
+<meta property="og:title" content="Ver Perfil — ScriptDrop">
+<meta property="og:description" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop 🚀">
+<meta property="og:image" content="https://scriptssforroblox.github.io/ScriptsForRoblox/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://scriptssforroblox.github.io/ScriptsForRoblox/profile">
 <meta name="theme-color" content="#7c6af7">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" id="tw-title" content="Ver Perfil no ScriptDrop">
-<meta name="twitter:description" id="tw-desc" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop.">
-<meta name="twitter:image" id="tw-image" content="https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ver Perfil — ScriptDrop">
+<meta name="twitter:description" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop 🚀">
+<meta name="twitter:image" content="https://scriptssforroblox.github.io/ScriptsForRoblox/preview.png">
 
 <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
 <link rel="stylesheet" href="style.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="icons.js" defer></script>
 </head>
 <style>
   :root {
@@ -170,6 +173,75 @@
   .profile-scripts { margin-top: 50px; padding: 0 20px; }
   .profile-scripts .feed-title { margin-bottom: 30px; font-size: 1.8rem; }
 
+  /* Music Player */
+  #musicPlayer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    background: rgba(15,15,15,0.92);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(124,106,247,0.3);
+    border-radius: 18px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,106,247,0.1);
+    min-width: 220px;
+    animation: fadeUp 0.4s ease;
+  }
+  #musicPlayer .mp-art {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg,#7c6af7,#a855f7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+    overflow: hidden;
+  }
+  #musicPlayer .mp-art img { width:100%;height:100%;object-fit:cover; }
+  #musicPlayer .mp-info { flex: 1; min-width: 0; }
+  #musicPlayer .mp-name {
+    font-size: 0.78rem; font-weight: 700; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 110px;
+  }
+  #musicPlayer .mp-bar-wrap {
+    width: 100%; height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px; margin-top: 5px; cursor: pointer; position: relative;
+  }
+  #musicPlayer .mp-bar-fill {
+    height: 100%; background: var(--primary);
+    border-radius: 2px; width: 0%; transition: width 0.3s linear;
+  }
+  #musicPlayer .mp-controls { display: flex; align-items: center; gap: 8px; }
+  #musicPlayer .mp-btn {
+    background: none; border: none; color: #aaa;
+    cursor: pointer; font-size: 1rem; padding: 4px;
+    transition: color 0.2s;
+  }
+  #musicPlayer .mp-btn:hover { color: #fff; }
+  #musicPlayer .mp-btn.active { color: var(--primary); }
+  #musicPlayer .mp-vol {
+    width: 60px; height: 3px;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+  #musicPlayer .mp-eq {
+    display: flex; align-items: flex-end; gap: 2px; height: 16px;
+  }
+  #musicPlayer .mp-eq span {
+    width: 3px; background: var(--primary); border-radius: 2px;
+    animation: eq 0.8s ease-in-out infinite alternate;
+  }
+  #musicPlayer .mp-eq span:nth-child(2) { animation-delay: 0.2s; }
+  #musicPlayer .mp-eq span:nth-child(3) { animation-delay: 0.4s; }
+  #musicPlayer .mp-eq.paused span { animation-play-state: paused; }
+  @keyframes eq {
+    from { height: 4px; } to { height: 14px; }
+  }
+
   @media (max-width: 800px) {
     .profile-header { flex-direction: column; align-items: center; text-align: center; gap: 20px; padding: 30px; }
     .profile-stats-row { justify-content: center; gap: 40px; }
@@ -192,8 +264,12 @@
         <a href="register" class="btn-primary-sm">Registrar</a>
       </div>
       <div id="nav-logged" class="nav-user-area" style="display:none">
-        <button class="btn-admin-nav" id="navAdminBtn" onclick="location.href='settings'"><i class="fas fa-crown"></i> Admin</button>
+        <button class="btn-admin-nav" id="navAdminBtn" onclick="location.href='settings'" style="display:none"><i class="fas fa-crown"></i> Admin</button>
         <button class="btn-post-nav" onclick="window.location='./'"><i class="fas fa-plus"></i> Postar</button>
+        <div class="notif-wrap" id="notifWrap">
+          <button class="notif-btn" id="notifBtn"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none"></span></button>
+          <div class="notif-panel" id="notifPanel"></div>
+        </div>
         <div class="nav-avatar-wrap" id="navAvatarWrap">
           <div class="nav-avatar" id="navAvatar"></div>
           <span id="navName"></span>
@@ -252,6 +328,25 @@
     </div>
   </div>
 </div>
+
+<!-- Music Player -->
+<div id="musicPlayer" style="display:none">
+  <div class="mp-art" id="mpArt"><i class="fas fa-music"></i></div>
+  <div class="mp-info">
+    <div class="mp-name" id="mpName">Música do Perfil</div>
+    <div class="mp-bar-wrap" id="mpBarWrap">
+      <div class="mp-bar-fill" id="mpBarFill"></div>
+    </div>
+  </div>
+  <div class="mp-controls">
+    <div class="mp-eq" id="mpEq"><span></span><span></span><span></span></div>
+    <button class="mp-btn" id="mpPlayBtn" onclick="toggleMusic()"><i class="fas fa-pause"></i></button>
+    <button class="mp-btn" id="mpMuteBtn" onclick="toggleMute()"><i class="fas fa-volume-up"></i></button>
+    <input type="range" class="mp-vol" id="mpVol" min="0" max="1" step="0.05" value="0.7" oninput="setVolume(this.value)">
+  </div>
+</div>
+
+<audio id="profileAudio" loop></audio>
 
 <footer class="footer">
   <div class="footer-inner">
@@ -423,11 +518,86 @@ function renderProfile(){
     </div>`;
 
   const grid = document.getElementById('profileGrid');
-  if(!userPosts.length){ grid.innerHTML='<p style="color:#555">Nenhum script publicado ainda.</p>'; return; }
-  grid.innerHTML = userPosts.map(p=>buildCard(p)).join('');
+  if(!userPosts.length){ grid.innerHTML='<p style="color:#555">Nenhum script publicado ainda.</p>'; }
+  else { grid.innerHTML = userPosts.map(p=>buildCard(p)).join(''); }
+
+  // inicia player de música
+  initMusic(user);
 }
 
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ---- Music Player ----
+const audio = document.getElementById('profileAudio');
+let musicPlaying = false;
+
+function initMusic(user) {
+  const src = user.profileMusic;
+  if (!src) return;
+  const player = document.getElementById('musicPlayer');
+  player.style.display = 'flex';
+
+  // avatar do usuário como arte
+  if (user.avatarURL) {
+    document.getElementById('mpArt').innerHTML = `<img src='${user.avatarURL}'>`;
+  }
+  document.getElementById('mpName').textContent = user.username + ' — música do perfil';
+
+  audio.src = src;
+  audio.volume = 0.7;
+  audio.play().then(() => {
+    musicPlaying = true;
+    document.getElementById('mpEq').classList.remove('paused');
+  }).catch(() => {
+    // autoplay bloqueado pelo browser — aguarda interação
+    musicPlaying = false;
+    document.getElementById('mpPlayBtn').innerHTML = '<i class="fas fa-play"></i>';
+    document.getElementById('mpEq').classList.add('paused');
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    document.getElementById('mpBarFill').style.width = (audio.currentTime / audio.duration * 100) + '%';
+  });
+
+  document.getElementById('mpBarWrap').addEventListener('click', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  });
+}
+
+function toggleMusic() {
+  const btn = document.getElementById('mpPlayBtn');
+  const eq = document.getElementById('mpEq');
+  if (audio.paused) {
+    audio.play();
+    musicPlaying = true;
+    btn.innerHTML = '<i class="fas fa-pause"></i>';
+    eq.classList.remove('paused');
+  } else {
+    audio.pause();
+    musicPlaying = false;
+    btn.innerHTML = '<i class="fas fa-play"></i>';
+    eq.classList.add('paused');
+  }
+}
+
+function toggleMute() {
+  const btn = document.getElementById('mpMuteBtn');
+  audio.muted = !audio.muted;
+  btn.innerHTML = audio.muted
+    ? '<i class="fas fa-volume-mute"></i>'
+    : '<i class="fas fa-volume-up"></i>';
+  btn.classList.toggle('active', audio.muted);
+}
+
+function setVolume(v) {
+  audio.volume = v;
+  audio.muted = false;
+  const btn = document.getElementById('mpMuteBtn');
+  btn.innerHTML = v == 0 ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+  btn.classList.toggle('active', v == 0);
+}
 function buildCard(p){
   const tags=(p.tags||[]).slice(0,3).map(t=>`<span class="tag-chip">${escapeHtml(t)}</span>`).join('');
   const img=p.image?`<div class="card-img"><img src="${escapeHtml(p.image)}" onerror="this.parentElement.style.display='none'"/></div>`:'';

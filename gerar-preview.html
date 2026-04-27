@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Gerar preview.png</title></head>
+<body style="background:#000;color:#fff;font-family:sans-serif;padding:30px;text-align:center">
+  <h2>Clique no botão para baixar o preview.png</h2>
+  <p style="color:#888">Depois coloque o arquivo <code>preview.png</code> na raiz do repositório GitHub</p>
+  <br>
+  <canvas id="c" width="1200" height="630" style="max-width:100%;border-radius:12px"></canvas>
+  <br><br>
+  <button onclick="download()" style="background:#7c6af7;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-size:1rem;cursor:pointer;font-weight:700">⬇️ Baixar preview.png</button>
+
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+
+// Background
+const bg = ctx.createLinearGradient(0,0,1200,630);
+bg.addColorStop(0,'#0a0a0a');
+bg.addColorStop(1,'#0f0f1a');
+ctx.fillStyle = bg;
+ctx.fillRect(0,0,1200,630);
+
+// Glow orbs
+function glow(x,y,r,color,alpha){
+  const g = ctx.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0, color.replace(')',`,${alpha})`).replace('rgb','rgba'));
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+}
+glow(200,150,300,'rgb(124,106,247)',0.18);
+glow(1050,480,350,'rgb(168,85,247)',0.14);
+glow(600,630,250,'rgb(124,106,247)',0.10);
+
+// Grid lines
+ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+ctx.lineWidth = 1;
+[210,420].forEach(y=>{ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1200,y);ctx.stroke(); });
+[400,800].forEach(x=>{ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,630);ctx.stroke(); });
+
+// Logo box
+ctx.save();
+ctx.beginPath();
+roundRect(ctx,80,220,90,90,22);
+ctx.fillStyle='rgba(124,106,247,0.12)';ctx.fill();
+ctx.strokeStyle='rgba(124,106,247,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+ctx.restore();
+
+// Lightning
+ctx.font='48px serif'; ctx.textAlign='center';
+ctx.fillText('⚡',125,278);
+
+// Title
+ctx.textAlign='left';
+ctx.font='900 54px Inter,Arial,sans-serif';
+ctx.fillStyle='#ffffff'; ctx.fillText('Script',190,260);
+const grd = ctx.createLinearGradient(380,200,560,260);
+grd.addColorStop(0,'#7c6af7'); grd.addColorStop(1,'#a855f7');
+ctx.fillStyle=grd; ctx.fillText('Drop',385,260);
+
+// Tagline
+ctx.font='400 20px Inter,Arial,sans-serif';
+ctx.fillStyle='#888888';
+ctx.fillText('Plataforma #1 de Scripts Premium',190,300);
+
+// Divider
+const dg = ctx.createLinearGradient(80,332,580,332);
+dg.addColorStop(0,'rgba(124,106,247,0.6)'); dg.addColorStop(1,'rgba(124,106,247,0)');
+ctx.fillStyle=dg; ctx.fillRect(80,330,500,2);
+
+// Description
+ctx.font='400 22px Inter,Arial,sans-serif';
+ctx.fillStyle='#cccccc';
+ctx.fillText('🚀 Explore, copie e publique scripts da comunidade.',80,375);
+ctx.fillStyle='#888888';
+ctx.fillText('Grátis para sempre. Sem complicação.',80,410);
+
+// Pills
+function pill(x,y,w,h,r,color,text){
+  ctx.save();
+  ctx.beginPath(); roundRect(ctx,x,y,w,h,r);
+  ctx.fillStyle=color+'26'; ctx.fill();
+  ctx.strokeStyle=color+'66'; ctx.lineWidth=1; ctx.stroke();
+  ctx.font='600 15px Inter,Arial,sans-serif';
+  ctx.fillStyle=color; ctx.textAlign='center';
+  ctx.fillText(text,x+w/2,y+h/2+5);
+  ctx.restore();
+}
+pill(80,450,165,38,19,'#7c6af7','⚡ Scripts Roblox');
+pill(258,450,145,38,19,'#a855f7','🛡️ Moderação');
+pill(416,450,155,38,19,'#00d4aa','🎵 Perfis Únicos');
+
+// Code block
+ctx.save();
+ctx.beginPath(); roundRect(ctx,720,160,420,310,20);
+ctx.fillStyle='rgba(17,17,17,0.95)'; ctx.fill();
+ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke();
+ctx.restore();
+
+// Code bar
+ctx.save();
+ctx.beginPath(); roundRect(ctx,720,160,420,44,20);
+ctx.fillStyle='#1a1a1a'; ctx.fill();
+ctx.restore();
+ctx.fillStyle='#1a1a1a'; ctx.fillRect(720,182,420,22);
+[[748,'#ff5f57'],[772,'#febc2e'],[796,'#28c840']].forEach(([x,c])=>{
+  ctx.beginPath(); ctx.arc(x,182,7,0,Math.PI*2);
+  ctx.fillStyle=c; ctx.fill();
+});
+ctx.font='13px monospace'; ctx.fillStyle='#555'; ctx.textAlign='center';
+ctx.fillText('speed_hack.lua',930,188);
+
+// Code text
+ctx.textAlign='left';
+const lines = [
+  {x:745,y:232,parts:[['#c792ea','local '],['#82aaff','Players'],['#fff',' = game:GetService('],['#c3e88d','"Players"'],['#fff',')']]},
+  {x:745,y:262,parts:[['#546e7a','-- ⚡ Speed Boost']]},
+  {x:745,y:292,parts:[['#82aaff','char'],['#fff','.Humanoid.WalkSpeed = '],['#f78c6c','150']]},
+  {x:745,y:322,parts:[['#82aaff','char'],['#fff','.Humanoid.JumpPower = '],['#f78c6c','250']]},
+  {x:745,y:352,parts:[['#c792ea','game'],['#fff',':GetService('],['#c3e88d','"RunService"'],['#fff',')']]},
+  {x:745,y:382,parts:[['#fff','  .Heartbeat:'],['#82aaff','Connect'],['#fff','('],['#c792ea','function'],['#fff','())']]},
+];
+ctx.font='14px "Courier New",monospace';
+lines.forEach(({x,y,parts})=>{
+  let cx=x;
+  parts.forEach(([color,text])=>{
+    ctx.fillStyle=color; ctx.fillText(text,cx,y);
+    cx+=ctx.measureText(text).width;
+  });
+});
+
+// Bottom URL
+ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(80,560,1040,1);
+ctx.font='16px Inter,Arial,sans-serif'; ctx.fillStyle='#444'; ctx.textAlign='center';
+ctx.fillText('scriptssforroblox.github.io/ScriptsForRoblox',600,600);
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+function download(){
+  const a=document.createElement('a');
+  a.download='preview.png';
+  a.href=c.toDataURL('image/png');
+  a.click();
+}
+</script>
+</body>
+</html>

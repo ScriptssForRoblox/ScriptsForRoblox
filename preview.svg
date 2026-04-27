@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a"/>
+      <stop offset="100%" style="stop-color:#0f0f1a"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c6af7"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <filter id="blur1">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+    <filter id="blur2">
+      <feGaussianBlur stdDeviation="80"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Glow orbs -->
+  <circle cx="200" cy="150" r="200" fill="#7c6af7" opacity="0.12" filter="url(#blur1)"/>
+  <circle cx="1050" cy="480" r="250" fill="#a855f7" opacity="0.10" filter="url(#blur2)"/>
+  <circle cx="600" cy="600" r="180" fill="#7c6af7" opacity="0.07" filter="url(#blur1)"/>
+
+  <!-- Grid lines -->
+  <line x1="0" y1="210" x2="1200" y2="210" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  <line x1="0" y1="420" x2="1200" y2="420" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  <line x1="400" y1="0" x2="400" y2="630" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  <line x1="800" y1="0" x2="800" y2="630" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+
+  <!-- Logo icon bg -->
+  <rect x="80" y="220" width="90" height="90" rx="24" fill="url(#glow)" opacity="0.15"/>
+  <rect x="80" y="220" width="90" height="90" rx="24" fill="none" stroke="url(#glow)" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- Lightning bolt ⚡ -->
+  <text x="125" y="280" font-size="48" text-anchor="middle" fill="url(#glow)">⚡</text>
+
+  <!-- ScriptDrop title -->
+  <text x="190" y="258" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="900" fill="#ffffff" letter-spacing="-2">Script</text>
+  <text x="380" y="258" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="900" letter-spacing="-2">
+    <tspan fill="url(#glow)">Drop</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="190" y="300" font-family="Inter, Arial, sans-serif" font-size="20" fill="#888888" letter-spacing="0.5">Plataforma #1 de Scripts Premium</text>
+
+  <!-- Divider -->
+  <rect x="80" y="330" width="500" height="2" rx="1" fill="url(#glow)" opacity="0.3"/>
+
+  <!-- Description -->
+  <text x="80" y="375" font-family="Inter, Arial, sans-serif" font-size="22" fill="#cccccc">🚀 Explore, copie e publique scripts da comunidade.</text>
+  <text x="80" y="410" font-family="Inter, Arial, sans-serif" font-size="22" fill="#888888">Grátis para sempre. Sem complicação.</text>
+
+  <!-- Feature pills -->
+  <rect x="80" y="450" width="160" height="38" rx="19" fill="#7c6af7" opacity="0.15"/>
+  <rect x="80" y="450" width="160" height="38" rx="19" fill="none" stroke="#7c6af7" stroke-width="1" opacity="0.4"/>
+  <text x="160" y="474" font-family="Inter, Arial, sans-serif" font-size="15" fill="#7c6af7" text-anchor="middle" font-weight="600">⚡ Scripts Roblox</text>
+
+  <rect x="255" y="450" width="140" height="38" rx="19" fill="#a855f7" opacity="0.15"/>
+  <rect x="255" y="450" width="140" height="38" rx="19" fill="none" stroke="#a855f7" stroke-width="1" opacity="0.4"/>
+  <text x="325" y="474" font-family="Inter, Arial, sans-serif" font-size="15" fill="#a855f7" text-anchor="middle" font-weight="600">🛡️ Moderação</text>
+
+  <rect x="410" y="450" width="150" height="38" rx="19" fill="#00d4aa" opacity="0.12"/>
+  <rect x="410" y="450" width="150" height="38" rx="19" fill="none" stroke="#00d4aa" stroke-width="1" opacity="0.3"/>
+  <text x="485" y="474" font-family="Inter, Arial, sans-serif" font-size="15" fill="#00d4aa" text-anchor="middle" font-weight="600">🎵 Perfis Únicos</text>
+
+  <!-- Right side: code block -->
+  <rect x="720" y="160" width="420" height="310" rx="20" fill="#111111" opacity="0.9"/>
+  <rect x="720" y="160" width="420" height="310" rx="20" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1"/>
+
+  <!-- Code bar -->
+  <rect x="720" y="160" width="420" height="44" rx="20" fill="#1a1a1a"/>
+  <rect x="720" y="182" width="420" height="22" fill="#1a1a1a"/>
+  <circle cx="748" cy="182" r="7" fill="#ff5f57"/>
+  <circle cx="772" cy="182" r="7" fill="#febc2e"/>
+  <circle cx="796" cy="182" r="7" fill="#28c840"/>
+  <text x="930" y="188" font-family="monospace" font-size="13" fill="#555555" text-anchor="middle">speed_hack.lua</text>
+
+  <!-- Code lines -->
+  <text x="745" y="232" font-family="'JetBrains Mono', monospace" font-size="14" fill="#c792ea">local</text>
+  <text x="795" y="232" font-family="'JetBrains Mono', monospace" font-size="14" fill="#82aaff">Players</text>
+  <text x="860" y="232" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff"> = game:GetService(</text>
+  <text x="1010" y="232" font-family="'JetBrains Mono', monospace" font-size="14" fill="#c3e88d">"Players"</text>
+  <text x="1080" y="232" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">)</text>
+
+  <text x="745" y="262" font-family="'JetBrains Mono', monospace" font-size="14" fill="#546e7a">-- ⚡ Speed Boost</text>
+
+  <text x="745" y="292" font-family="'JetBrains Mono', monospace" font-size="14" fill="#82aaff">char</text>
+  <text x="785" y="292" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">.Humanoid.WalkSpeed = </text>
+  <text x="1010" y="292" font-family="'JetBrains Mono', monospace" font-size="14" fill="#f78c6c">150</text>
+
+  <text x="745" y="322" font-family="'JetBrains Mono', monospace" font-size="14" fill="#82aaff">char</text>
+  <text x="785" y="322" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">.Humanoid.JumpPower = </text>
+  <text x="1010" y="322" font-family="'JetBrains Mono', monospace" font-size="14" fill="#f78c6c">250</text>
+
+  <text x="745" y="352" font-family="'JetBrains Mono', monospace" font-size="14" fill="#c792ea">game</text>
+  <text x="785" y="352" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">:GetService(</text>
+  <text x="893" y="352" font-family="'JetBrains Mono', monospace" font-size="14" fill="#c3e88d">"RunService"</text>
+  <text x="1010" y="352" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">)</text>
+
+  <text x="745" y="382" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">  .Heartbeat:</text>
+  <text x="845" y="382" font-family="'JetBrains Mono', monospace" font-size="14" fill="#82aaff">Connect</text>
+  <text x="905" y="382" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">(</text>
+  <text x="915" y="382" font-family="'JetBrains Mono', monospace" font-size="14" fill="#c792ea">function</text>
+  <text x="975" y="382" font-family="'JetBrains Mono', monospace" font-size="14" fill="#ffffff">())</text>
+
+  <!-- URL bar at bottom -->
+  <rect x="80" y="560" width="1040" height="1" fill="#ffffff" opacity="0.05"/>
+  <text x="600" y="600" font-family="Inter, Arial, sans-serif" font-size="16" fill="#444444" text-anchor="middle">scriptssforroblox.github.io/ScriptsForRoblox</text>
+</svg>
