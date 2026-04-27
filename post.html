@@ -1,44 +1,287 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/><title>Postar Script — ScriptDrop</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Publicar Script — ScriptDrop</title>
+<meta name="theme-color" content="#7c6af7">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
 <link rel="stylesheet" href="style.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="icons.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="firebase.js"></script>
+<style>
+  .post-page { max-width: 900px; margin: 50px auto; padding: 0 20px 80px; }
+  .post-header { margin-bottom: 40px; }
+  .post-header h1 { font-size: 2.2rem; font-weight: 900; }
+  .post-header p { color: #555; margin-top: 8px; }
+  .post-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .post-grid .fg-full { grid-column: 1 / -1; }
+  .post-card-wrap { background: #111; border: 1px solid #222; border-radius: 20px; padding: 35px; }
+  .post-section-title { font-size: 0.75rem; text-transform: uppercase; color: #555; font-weight: 800; letter-spacing: 1px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .post-section-title i { color: #7c6af7; }
+  .fg { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+  .fg label { font-size: 0.85rem; color: #aaa; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .fg label i { color: #7c6af7; font-size: 0.8rem; }
+  .fg input, .fg textarea, .fg select { background: #0a0a0a; border: 1px solid #222; padding: 13px 15px; border-radius: 10px; color: #fff; outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color .2s; }
+  .fg input:focus, .fg textarea:focus { border-color: #7c6af7; box-shadow: 0 0 0 3px rgba(124,106,247,.1); }
+  .fg textarea { min-height: 300px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; resize: vertical; }
+  .fg .hint { font-size: 0.75rem; color: #444; }
+  .tag-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; background: #0a0a0a; border: 1px solid #222; border-radius: 10px; padding: 8px 12px; min-height: 46px; align-items: center; cursor: text; }
+  .tag-input-wrap:focus-within { border-color: #7c6af7; }
+  .tag-pill { background: rgba(124,106,247,.2); color: #b0a3ff; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+  .tag-pill button { background: none; color: #b0a3ff; font-size: 0.7rem; padding: 0; line-height: 1; }
+  .tag-pill button:hover { color: #ff6b6b; }
+  #tagRealInput { background: none; border: none; outline: none; color: #fff; font-size: 0.85rem; min-width: 80px; flex: 1; padding: 3px 0; }
+  .preview-card { background: #0a0a0a; border: 1px solid #222; border-radius: 12px; overflow: hidden; }
+  .preview-card-top { padding: 12px 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #555; }
+  .preview-card-img { height: 140px; background: #111; display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem; overflow: hidden; }
+  .preview-card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .preview-card-body { padding: 15px; }
+  .preview-card-title { font-weight: 700; color: #fff; margin-bottom: 5px; font-size: 0.95rem; }
+  .preview-card-game { color: #7c6af7; font-size: 0.8rem; font-weight: 600; }
+  .btn-publish { background: linear-gradient(135deg, #7c6af7, #a855f7); color: #fff; padding: 16px 40px; border-radius: 12px; font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px rgba(124,106,247,.4); transition: all .3s; }
+  .btn-publish:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(124,106,247,.5); }
+  .btn-publish:disabled { opacity: .6; transform: none; }
+  .char-count { font-size: 0.72rem; color: #444; text-align: right; margin-top: 4px; }
+  @media(max-width:700px){ .post-grid { grid-template-columns: 1fr; } .post-grid .fg-full { grid-column: 1; } }
+</style>
 </head>
 <body>
-<nav class="navbar"><div class="nav-inner"><a class="nav-logo" href="./">⚡ ScriptDrop</a></div></nav>
-<div class="main-wrap" style="display:block; max-width:800px; margin: 50px auto;">
-  <div class="settings-card" style="padding:40px">
-    <h1 style="margin-bottom:30px"><i class="fas fa-upload" style="color:#7c6af7"></i> Publicar Novo Script</h1>
-    <div class="fg">
-      <label>ID do Jogo (Roblox)</label>
-      <div style="display:flex; gap:10px">
-        <input id="mGameId" placeholder="Cole o ID do jogo aqui...">
-        <button class="btn-primary-sm" onclick="autoFetchGame()">Puxar Info</button>
+<canvas id="particles"></canvas>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" href="./"><div class="logo-glow"><sd-icon name="bolt" size="22"></sd-icon></div><span>Script<span class="acc">Drop</span></span></a>
+    <div class="nav-links">
+      <a href="./" class="nl"><sd-icon name="home" size="16"></sd-icon> Home</a>
+      <a href="./#scripts" class="nl"><sd-icon name="code" size="16"></sd-icon> Scripts</a>
+    </div>
+    <div class="nav-right">
+      <div id="nav-guest" class="nav-auth">
+        <a href="login" class="btn-ghost-sm">Entrar</a>
+        <a href="register" class="btn-primary-sm">Registrar</a>
+      </div>
+      <div id="nav-logged" class="nav-user-area" style="display:none">
+        <button class="btn-admin-nav" id="navAdminBtn" onclick="location.href='settings'" style="display:none"><sd-icon name="crown" size="15"></sd-icon> Admin</button>
+        <div class="notif-wrap" id="notifWrap">
+          <button class="notif-btn" id="notifBtn"><sd-icon name="bell" size="16"></sd-icon><span class="notif-badge" id="notifBadge" style="display:none"></span></button>
+          <div class="notif-panel" id="notifPanel"></div>
+        </div>
+        <div class="nav-avatar-wrap" id="navAvatarWrap">
+          <div class="nav-avatar" id="navAvatar"></div>
+          <span id="navName"></span>
+          <sd-icon name="chevdown" size="12"></sd-icon>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="profile"><sd-icon name="user" size="15"></sd-icon> Meu Perfil</a>
+            <a href="settings"><sd-icon name="gear" size="15"></sd-icon> Configurações</a>
+            <div class="dd-divider"></div>
+            <a onclick="logout()" style="color:#ff6b6b;cursor:pointer"><sd-icon name="signout" size="15"></sd-icon> Sair</a>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="fg"><label>Título do Script *</label><input id="mTitle" placeholder="Ex: Fly Hack Gui"></div>
-    <div class="fg"><label>Nome do Jogo *</label><input id="mGame" placeholder="Ex: Blox Fruits"></div>
-    <div class="fg"><label>URL da Imagem</label><input id="mImage" placeholder="URL da foto"></div>
-    <div class="fg"><label>Script (Código) *</label><textarea id="mCode" style="height:300px"></textarea></div>
-    <button class="btn-submit" onclick="submitPost()">Publicar Agora</button>
+  </div>
+</nav>
+
+<div class="post-page">
+  <div class="post-header animate-fade-up">
+    <h1><i class="fas fa-rocket" style="color:#7c6af7"></i> Publicar Script</h1>
+    <p>Compartilhe seu script com a comunidade ScriptDrop</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:30px;align-items:start">
+    <!-- Formulário -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <!-- Info básica -->
+      <div class="post-card-wrap animate-fade-up" style="animation-delay:.1s">
+        <div class="post-section-title"><i class="fas fa-info-circle"></i> Informações Básicas</div>
+        <div class="post-grid">
+          <div class="fg fg-full">
+            <label><i class="fas fa-heading"></i> Título *</label>
+            <input id="pTitle" placeholder="Ex: Speed Hack — Blox Fruits" maxlength="80" oninput="updatePreview()"/>
+            <div class="char-count" id="titleCount">0/80</div>
+          </div>
+          <div class="fg">
+            <label><i class="fas fa-gamepad"></i> Jogo / Categoria *</label>
+            <input id="pGame" placeholder="Ex: Blox Fruits, Universal..." oninput="updatePreview()"/>
+          </div>
+          <div class="fg">
+            <label><i class="fas fa-image"></i> Imagem de Capa <span style="color:#444;font-size:.75rem">(URL)</span></label>
+            <input id="pImage" placeholder="https://..." oninput="updatePreview()"/>
+          </div>
+          <div class="fg fg-full">
+            <label><i class="fas fa-align-left"></i> Descrição</label>
+            <input id="pDesc" placeholder="O que esse script faz? Quais são os recursos?"/>
+          </div>
+          <div class="fg fg-full">
+            <label><i class="fas fa-tags"></i> Tags <span style="color:#444;font-size:.75rem">(Enter para adicionar)</span></label>
+            <div class="tag-input-wrap" id="tagWrap" onclick="document.getElementById('tagRealInput').focus()">
+              <input id="tagRealInput" placeholder="Ex: speed, hack, op..." onkeydown="handleTagInput(event)"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Código -->
+      <div class="post-card-wrap animate-fade-up" style="animation-delay:.2s">
+        <div class="post-section-title"><i class="fas fa-code"></i> Código do Script *</div>
+        <div class="fg">
+          <textarea id="pCode" placeholder="Cole o script aqui...&#10;&#10;-- Exemplo:&#10;local Players = game:GetService('Players')&#10;local lp = Players.LocalPlayer"></textarea>
+          <div class="char-count" id="codeCount">0 caracteres</div>
+        </div>
+      </div>
+
+      <!-- Botão -->
+      <div class="animate-fade-up" style="animation-delay:.3s;display:flex;gap:15px;align-items:center">
+        <button class="btn-publish" id="publishBtn" onclick="publishScript()">
+          <i class="fas fa-rocket"></i> Publicar Script
+        </button>
+        <a href="./" style="color:#555;font-size:.9rem"><i class="fas fa-arrow-left"></i> Cancelar</a>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div style="position:sticky;top:90px" class="animate-fade-up" style="animation-delay:.15s">
+      <div class="post-section-title" style="margin-bottom:12px"><i class="fas fa-eye" style="color:#7c6af7"></i> Preview do Card</div>
+      <div class="preview-card">
+        <div class="preview-card-top">
+          <span id="prevTime">agora</span>
+          <span id="prevAuthor" style="color:#7c6af7">@você</span>
+        </div>
+        <div class="preview-card-img" id="prevImg"><i class="fas fa-code"></i></div>
+        <div class="preview-card-body">
+          <div class="preview-card-title" id="prevTitle">Título do Script</div>
+          <div class="preview-card-game" id="prevGame"><i class="fas fa-gamepad"></i> Universal</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;background:#111;border:1px solid #222;border-radius:12px;padding:15px">
+        <div style="font-size:.75rem;color:#555;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Dicas</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:.82rem;color:#666">
+          <span><i class="fas fa-check" style="color:#00d4aa;margin-right:6px"></i>Título claro e descritivo</span>
+          <span><i class="fas fa-check" style="color:#00d4aa;margin-right:6px"></i>Adicione tags para ser encontrado</span>
+          <span><i class="fas fa-check" style="color:#00d4aa;margin-right:6px"></i>Imagem de capa chama atenção</span>
+          <span><i class="fas fa-check" style="color:#00d4aa;margin-right:6px"></i>Descreva o que o script faz</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">⚡ Script<span class="acc">Drop</span></div>
+    <p>© 2025 ScriptDrop</p>
+  </div>
+</footer>
+
 <script src="app.js"></script>
 <script>
-async function autoFetchGame() {
-  const id = document.getElementById('mGameId').value.trim();
-  if(!id) return;
-  showNotification("Buscando dados do Roblox...");
-  const gameInfo = await fetchRobloxGame(id);
-  if(gameInfo) {
-    document.getElementById('mGame').value = gameInfo.name;
-    document.getElementById('mImage').value = gameInfo.image;
-    showNotification("Dados carregados!");
-  } else {
-    showNotification("Não consegui encontrar o jogo.", "error");
+const tags = [];
+
+function handleTagInput(e) {
+  const input = document.getElementById('tagRealInput');
+  if ((e.key === 'Enter' || e.key === ',') && input.value.trim()) {
+    e.preventDefault();
+    const tag = input.value.trim().replace(/,/g,'');
+    if (tag && !tags.includes(tag) && tags.length < 8) {
+      tags.push(tag);
+      renderTags();
+    }
+    input.value = '';
+  } else if (e.key === 'Backspace' && !input.value && tags.length) {
+    tags.pop();
+    renderTags();
   }
 }
+
+function renderTags() {
+  const wrap = document.getElementById('tagWrap');
+  const input = document.getElementById('tagRealInput');
+  wrap.innerHTML = '';
+  tags.forEach((t, i) => {
+    const pill = document.createElement('span');
+    pill.className = 'tag-pill';
+    pill.innerHTML = `${t} <button onclick="removeTag(${i})"><i class="fas fa-times"></i></button>`;
+    wrap.appendChild(pill);
+  });
+  wrap.appendChild(input);
+  input.focus();
+}
+
+function removeTag(i) { tags.splice(i, 1); renderTags(); }
+
+function updatePreview() {
+  const title = document.getElementById('pTitle').value || 'Título do Script';
+  const game = document.getElementById('pGame').value || 'Universal';
+  const img = document.getElementById('pImage').value;
+  const titleCount = document.getElementById('pTitle').value.length;
+  const codeLen = document.getElementById('pCode').value.length;
+
+  document.getElementById('prevTitle').textContent = title;
+  document.getElementById('prevGame').innerHTML = `<i class="fas fa-gamepad"></i> ${game}`;
+  document.getElementById('titleCount').textContent = titleCount + '/80';
+  document.getElementById('codeCount').textContent = codeLen.toLocaleString() + ' caracteres';
+
+  const prevImg = document.getElementById('prevImg');
+  if (img) {
+    prevImg.innerHTML = `<img src="${img}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-code\\'></i>'">`;
+  } else {
+    prevImg.innerHTML = '<i class="fas fa-code"></i>';
+  }
+
+  if (_currentUser) document.getElementById('prevAuthor').textContent = '@' + _currentUser.username;
+}
+
+document.getElementById('pCode').addEventListener('input', updatePreview);
+
+async function publishScript() {
+  const title = document.getElementById('pTitle').value.trim();
+  const code  = document.getElementById('pCode').value.trim();
+  const game  = document.getElementById('pGame').value.trim();
+  const image = document.getElementById('pImage').value.trim();
+  const desc  = document.getElementById('pDesc').value.trim();
+  const btn   = document.getElementById('publishBtn');
+
+  if (!_currentUser) return showNotification('Faça login para postar!', 'error');
+  if (!title) return showNotification('Título é obrigatório.', 'error');
+  if (!code)  return showNotification('O código do script é obrigatório.', 'error');
+  if (_currentUser.isBanned) return showNotification('Sua conta está banida.', 'error');
+  if (_currentUser.timeoutUntil > Date.now()) return showNotification('Você está em timeout.', 'error');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+
+  try {
+    const postId = Date.now().toString();
+    await DB.set('posts/' + postId, {
+      id: postId, title, code, game, image, desc, tags,
+      author: _currentUser.username,
+      authorUID: _currentUser.uid,
+      date: new Date().toLocaleDateString('pt-BR'),
+      ts: Date.now(),
+      isVerifiedPost: _currentUser.isVerified || false,
+      views: 0
+    });
+    showNotification('Script publicado com sucesso!');
+    setTimeout(() => location.href = 'script?id=' + postId, 1000);
+  } catch(e) {
+    console.error(e);
+    showNotification('Erro ao publicar.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-rocket"></i> Publicar Script';
+  }
+}
+
+auth.onAuthStateChanged(user => {
+  if (!user) { location.href = 'login'; return; }
+  updatePreview();
+});
 </script>
 </body>
 </html>

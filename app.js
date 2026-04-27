@@ -20,14 +20,19 @@ function showNotification(msg, type = 'success') {
     document.body.appendChild(container);
   }
   const notif = document.createElement('div');
-  notif.className = `notif-item ${type} animate-fade-up`;
+  notif.className = `notif-item ${type}`;
+  notif.style.cssText = 'opacity:0;transform:translateY(20px);transition:opacity .4s,transform .4s';
   const icon = type === 'error' ? 'fa-circle-xmark' : 'fa-circle-check';
   notif.innerHTML = `<i class="fas ${icon}"></i> <span>${msg}</span>`;
   container.appendChild(notif);
+  requestAnimationFrame(() => {
+    notif.style.opacity = '1';
+    notif.style.transform = 'translateY(0)';
+  });
   setTimeout(() => {
     notif.style.opacity = '0';
-    notif.style.transform = 'translate(0,-20px)';
-    setTimeout(() => notif.remove(), 500);
+    notif.style.transform = 'translateY(-20px)';
+    setTimeout(() => notif.remove(), 400);
   }, 4000);
 }
 
@@ -456,6 +461,7 @@ function startRgbName() {
 }
 
 // ---- Navbar ----
+let _navbarInited = false;
 function initNavbar() {
   const guest  = document.getElementById('nav-guest');
   const logged = document.getElementById('nav-logged');
@@ -490,6 +496,10 @@ function initNavbar() {
     guest.style.display  = 'flex';
     logged.style.display = 'none';
   }
+
+  // Listeners só uma vez
+  if (_navbarInited) return;
+  _navbarInited = true;
 
   const wrap = document.getElementById('navAvatarWrap');
   const drop = document.getElementById('navDropdown');

@@ -226,6 +226,19 @@
   </div>
 </div>
 
+<!-- Modal Add Badge -->
+<div id="addBadgeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:3000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#161616;border:1px solid #333;border-radius:16px;padding:30px;width:100%;max-width:420px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 style="color:#fff"><i class="fas fa-medal" style="color:#7c6af7"></i> Adicionar Badge</h3>
+      <button onclick="closeAddBadge()" style="background:none;color:#555;font-size:1.2rem"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="fg"><label>Descrição</label><input id="addBadgeDesc" placeholder="Ex: Verificado, Early Adopter..."/></div>
+    <div class="fg"><label>Ícone (emoji ou URL de imagem)</label><input id="addBadgeIcon" placeholder="✅ ou https://..."/></div>
+    <button class="btn-submit" onclick="confirmAddBadge()"><i class="fas fa-plus"></i> Adicionar</button>
+  </div>
+</div>
+
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-logo">⚡ Script<span class="acc">Drop</span></div>
@@ -428,53 +441,94 @@ async function renderAdminUsers() {
   const q = (document.getElementById('adminSearch')?.value || '').toLowerCase();
   const usersData = await DB.get('users');
   const list = document.getElementById('adminUserList');
-  if (!usersData) { list.innerHTML = '<p style="color:#555">Nenhum usuário.</p>'; return; }
+  if (!usersData) { list.innerHTML = '<p style="color:#555;padding:20px">Nenhum usuário.</p>'; return; }
 
-  list.innerHTML = Object.entries(usersData)
+  const users = Object.entries(usersData)
     .map(([uid, u]) => ({ uid, ...u }))
-    .filter(u => u.id?.includes(q) || u.username?.toLowerCase().includes(q))
-    .map(u => {
-      const badgesHtml = (u.badges || []).map((b, i) => `
-        <span class="badge-tag">
-          ${b.icon.startsWith('http') ? `<img src="${b.icon}">` : b.icon} ${escHtml(b.desc)}
-          <button onclick="adminAction('${u.uid}','removeBadge',${i})"><i class="fas fa-times"></i></button>
-        </span>`).join('');
+    .filter(u => !q || u.username?.toLowerCase().includes(q) || (u.id||'').includes(q));
 
-      return `
-      <div class="admin-user-row">
-        <strong>${escHtml(u.username)}</strong> (#${u.id})
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-          <div class="settings-card">
-            <button class="btn-admin-action" onclick="adminAction('${u.uid}','${u.isBanned?'unban':'ban'}')">${u.isBanned?'Unban':'Ban'}</button>
-          </div>
-          <div class="settings-card">
-            ${badgesHtml}
-            <button class="btn-admin-action" onclick="promptBadge('${u.uid}')">Add Badge</button>
-          </div>
+  if (!users.length) { list.innerHTML = '<p style="color:#555;padding:20px">Nenhum resultado.</p>'; return; }
+
+  list.innerHTML = users.map(u => {
+    const badgesHtml = (u.badges || []).map((b, i) => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:#1a1a1a;border:1px solid #333;padding:3px 8px;border-radius:6px;font-size:.78rem;color:#ccc">
+        ${b.icon && (b.icon.startsWith('http')||b.icon.startsWith('data')) ? `<img src="${b.icon}" style="width:16px;height:16px;object-fit:cover;border-radius:3px">` : b.icon}
+        ${escHtml(b.desc)}
+        <button onclick="adminAction('${u.uid}','removeBadge',${i})" style="background:none;color:#ff6b6b;font-size:.7rem;padding:0;margin-left:2px"><i class="fas fa-times"></i></button>
+      </span>`).join('');
+
+    return `
+    <div style="background:#0d0d0d;border:1px solid #222;border-radius:14px;padding:20px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <span style="font-weight:800;color:#fff;font-size:1rem">${escHtml(u.username||'?')}</span>
+          <span style="color:#444;font-size:.75rem;margin-left:8px;font-family:monospace">#${escHtml(u.id||u.uid||'')}</span>
+          ${u.isBanned ? '<span style="background:#ff4757;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">BANIDO</span>' : ''}
+          ${u.isVerified ? '<span style="background:#1e90ff;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">✅ Verificado</span>' : ''}
         </div>
-      </div>`;
-    }).join('');
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <button onclick="adminAction('${u.uid}','${u.isBanned?'unban':'ban'}')" style="background:${u.isBanned?'#2f3542':'#ff4757'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
+          <i class="fas ${u.isBanned?'fa-unlock':'fa-ban'}"></i> ${u.isBanned?'Desbanir':'Banir'}
+        </button>
+        <button onclick="adminAction('${u.uid}','${u.isVerified?'unverify':'verify'}')" style="background:${u.isVerified?'#2f3542':'#1e90ff'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-check-circle"></i> ${u.isVerified?'Remover Verificação':'Verificar'}
+        </button>
+        <button onclick="openAddBadge('${u.uid}')" style="background:#7c6af7;color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-medal"></i> Add Badge
+        </button>
+      </div>
+      ${badgesHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${badgesHtml}</div>` : '<p style="color:#444;font-size:.78rem">Sem badges</p>'}
+    </div>`;
+  }).join('');
+}
+
+let _addBadgeUID = null;
+function openAddBadge(uid) {
+  _addBadgeUID = uid;
+  document.getElementById('addBadgeModal').style.display = 'flex';
+}
+function closeAddBadge() {
+  document.getElementById('addBadgeModal').style.display = 'none';
+  _addBadgeUID = null;
+}
+async function confirmAddBadge() {
+  if (!_addBadgeUID) return;
+  const desc = document.getElementById('addBadgeDesc').value.trim();
+  const icon = document.getElementById('addBadgeIcon').value.trim();
+  if (!desc || !icon) return showNotification('Preencha desc e ícone.', 'error');
+  const u = await DB.get('users/' + _addBadgeUID);
+  const badges = u.badges || [];
+  badges.push({ desc, icon });
+  await DB.update('users/' + _addBadgeUID, { badges });
+  showNotification('Badge adicionada!');
+  closeAddBadge();
+  renderAdminUsers();
 }
 
 async function adminAction(uid, type, extra) {
-  if (type === 'ban') await DB.update('users/' + uid, { isBanned: true });
-  if (type === 'unban') await DB.update('users/' + uid, { isBanned: false });
+  if (type === 'ban')      await DB.update('users/' + uid, { isBanned: true });
+  if (type === 'unban')    await DB.update('users/' + uid, { isBanned: false });
+  if (type === 'verify')   await DB.update('users/' + uid, { isVerified: true });
+  if (type === 'unverify') await DB.update('users/' + uid, { isVerified: false });
   if (type === 'removeBadge') {
     const u = await DB.get('users/' + uid);
-    u.badges.splice(extra, 1);
-    await DB.update('users/' + uid, { badges: u.badges });
+    const badges = u.badges || [];
+    badges.splice(extra, 1);
+    await DB.update('users/' + uid, { badges });
   }
+  showNotification('Ação realizada!');
   renderAdminUsers();
 }
 
 async function createGlobalBadge() {
   const desc = document.getElementById('newBadgeDesc').value.trim();
   const icon = document.getElementById('newBadgeIcon').value.trim();
+  if (!desc || !icon) return showNotification('Preencha todos os campos.', 'error');
   await DB.push('globalBadges', { desc, icon, ts: Date.now() });
   document.getElementById('newBadgeDesc').value = '';
   document.getElementById('newBadgeIcon').value = '';
   showNotification('Badge global criada!');
-  renderAdminUsers();
 }
 
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
