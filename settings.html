@@ -381,27 +381,31 @@ async function searchDeezer(q) {
           <div style="font-weight:700;color:#fff;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.title)}</div>
           <div style="font-size:.72rem;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.artist.name)} — ${escHtml(t.album.title)}</div>
         </div>
-        <button onclick="previewDeezer('${t.preview}',${i})" id="dpbtn-${i}"
+        <button onclick="previewDeezer(${i})" id="dpbtn-${i}"
                 style="background:#222;border:1px solid #333;color:#aaa;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.7rem">
           <i class="fas fa-play"></i>
         </button>
-        <button onclick="selectMusic(${JSON.stringify(escHtml(t.title))},${JSON.stringify(escHtml(t.artist.name))},'${t.preview}')"
+        <button onclick="selectMusic(${i})"
                 style="background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:#7c6af7;padding:5px 12px;border-radius:6px;font-size:.75rem;font-weight:700;flex-shrink:0">
           Usar
         </button>
       </div>`).join('');
+
+    // Salva os dados das tracks para acesso por índice
+    window._deezerTracks = data.data;
   } catch(e) {
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#ff6b6b;font-size:.85rem"><i class="fas fa-exclamation-triangle" style="margin-right:6px"></i>Erro ao buscar. Tente novamente.</div>';
   }
 }
 
 let _previewIdx = -1;
-function previewDeezer(url, idx) {
+function previewDeezer(idx) {
   if (_musicPreviewAudio) { _musicPreviewAudio.pause(); }
   const prevBtn = document.getElementById('dpbtn-' + _previewIdx);
   if (prevBtn) prevBtn.innerHTML = '<i class="fas fa-play"></i>';
   if (_previewIdx === idx) { _previewIdx = -1; return; }
   _previewIdx = idx;
+  const url = window._deezerTracks[idx].preview;
   _musicPreviewAudio = new Audio(url);
   _musicPreviewAudio.volume = 0.6;
   _musicPreviewAudio.play();
@@ -410,13 +414,15 @@ function previewDeezer(url, idx) {
   _musicPreviewAudio.onended = () => { if (btn) btn.innerHTML = '<i class="fas fa-play"></i>'; _previewIdx = -1; };
 }
 
-function selectMusic(name, artist, url) {
-  _selectedMusicUrl = url;
+function selectMusic(idx) {
+  const t = window._deezerTracks[idx];
+  if (!t) return;
+  _selectedMusicUrl = t.preview;
   pendingMusic = null;
-  document.getElementById('musicFileName').textContent = name + ' — ' + artist;
+  document.getElementById('musicFileName').textContent = t.title + ' — ' + t.artist.name;
   document.getElementById('musicPreviewBox').style.color = '#7c6af7';
   if (_musicPreviewAudio) _musicPreviewAudio.pause();
-  showNotification('Música selecionada: ' + name);
+  showNotification('Música selecionada: ' + t.title);
 }
 
 function setBannerPreset(url) {
@@ -671,7 +677,7 @@ async function renderBadgeLibrary() {
       <div style="width:40px;height:40px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${iconHtml}</div>
       <div style="flex:1">
         <div style="font-weight:700;color:#fff;font-size:.9rem">${escHtml(b.desc)}</div>
-        <div style="font-size:.72rem;color:#444;margin-top:2px;word-break:break-all">${escHtml(b.icon)}</div>
+        <div style="font-size:.72rem;color:#444;margin-top:2px">${isImg ? '<span style="color:#555;font-style:italic">imagem/gif</span>' : escHtml(b.icon)}</div>
       </div>
       <button onclick="openEditBadge('${key}')" style="background:#222;border:1px solid #333;color:#aaa;padding:7px 12px;border-radius:8px;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:5px">
         <i class="fas fa-edit"></i> Editar
