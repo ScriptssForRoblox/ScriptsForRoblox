@@ -366,9 +366,8 @@ function setColor(c){ document.getElementById('editColor').value=c; }
 function setNameColor(c){ document.getElementById('editNameColor').value=c; }
 
 function openEditModal(){
-  const session = localStorage.getItem('session');
-  const users = JSON.parse(localStorage.getItem('users')||'[]');
-  const user = users.find(u=>u.username===session)||{};
+  const user = _currentUser;
+  if (!user) return;
   document.getElementById('editBio').value = user.bio||'';
   document.getElementById('editAvatarURL').value = user.avatarURL||'';
   document.getElementById('editBanner').value = user.banner||'';
@@ -377,6 +376,193 @@ function openEditModal(){
   document.getElementById('editModal').classList.add('open');
 }
 function closeEditModal(){ document.getElementById('editModal').classList.remove('open'); }
+
+async function saveProfile(){
+  if (!_currentUser) return;
+  const updates = {
+    bio: document.getElementById('editBio').value.trim(),
+    avatarURL: document.getElementById('editAvatarURL').value.trim(),
+    banner: document.getElementById('editBanner').value.trim(),
+    avatarColor: document.getElementById('editColor').value,
+    nameColor: document.getElementById('editNameColor').value,
+  };
+  try {
+    await DB.update(`users/${getUID()}`, updates);
+    Object.assign(_currentUser, updates);
+    localStorage.setItem('sd_user', JSON.stringify(_currentUser));
+    closeEditModal();
+    renderProfile();
+    showNotification('Perfil atualizado!');
+  } catch(e) {
+    showNotification('Erro ao salvar: ' + e.message, 'error');
+  }
+}
+
+async function renderProfile(){
+  const params = new URLSearchParams(location.search);
+  let targetUser = params.get('user');
+  const wrap = document.getElementById('profileWrap');
+  wrap.innerHTML = '<div style="text-align:center;padding:80px;color:#555"><i class="fas fa-spinner fa-spin" style="font-size:2rem"></i></div>';
+
+  // Aguarda _currentUser estar pronto
+  if (!targetUser) {
+    // Espera até 3s pelo auth
+    let waited = 0;
+    while (!_currentUser && waited < 30) { await new Promise(r=>setTimeout(r,100)); waited++; }
+    targetUser = _currentUser?.username;
+  }
+
+  if (!targetUser) {
+    wrap.innerHTML = '<div class="sp-err"><h2>Faça login para ver seu perfil</h2><a href="login" class="btn-hero-primary">Entrar</a></div>';
+    return;
+  }
+
+  // Busca UID pelo username
+  const uid = await DB.get(`usernames/${targetUser.toLowerCase()}`);
+  if (!uid) {
+    wrap.innerHTML = '<div class="sp-err"><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>';
+    return;
+  }
+
+  const user = await DB.get(`users/${uid}`);
+  if (!user) {
+    wrap.innerHTML = '<div class="sp-err"><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>';
+    return;
+  }
+
+  const isOwn = _currentUser?.username === targetUser;
+  const postsData = await DB.get('posts') || {};
+  const userPosts = Object.values(postsData).filter(p => p.author === targetUser).sort((a,b) => b.ts - a.ts);
+
+  document.title = `${targetUser} — ScriptDrop`;
+
+  const avatarColor = user.avatarColor||'#7c6af7';
+  const nameColor   = user.nameColor||'#ffffff';
+  const banner      = user.banner||'';
+  const bio         = user.bio||'Sem bio ainda.';
+  const totalViews  = userPosts.reduce((a,p)=>a+(p.views||0),0);
+
+  const isVideoBanner = banner.startsWith('data:video')||banner.endsWith('.mp4')||banner.endsWith('.webm');
+  const bannerInner = banner
+    ? (isVideoBanner
+      ? `<video src='${banner}' autoplay loop muted playsinline style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'></video>`
+      : `<img src='${banner}' style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'>`)
+    : '';
+
+  // Badges
+  let badgesHtml = '<div class="badges-row">';
+  if (user.id === '937937001112555531') badgesHtml += `<div class="badge-item" title="Owner & Founder">⚡</div>`;
+  (user.badges||[]).forEach(b => {
+    const isImg = b.icon&&(b.icon.startsWith('data:')||b.icon.startsWith('http'));
+    badgesHtml += `<div class="badge-item" title="${escHtml(b.desc)}">${isImg?`<img src='${b.icon}' style='width:24px;height:24px;object-fit:cover;border-radius:4px'>`:b.icon}</div>`;
+  });
+  badgesHtml += '</div>';
+
+  const avContent = user.avatarURL
+    ? `<img src='${user.avatarURL}' style='width:100%;height:100%;object-fit:cover'>`
+    : targetUser.charAt(0).toUpperCase();
+
+  // Follow button
+  const myFollowing = _currentUser?.following || [];
+  const isFollowing = myFollowing.includes(targetUser);
+  const mutual = isOwn ? false : await isMutualFollow(_currentUser?.username||'', targetUser);
+  const followBtn = !isOwn && _currentUser ? `<button class="btn-follow ${isFollowing?'following':''}" onclick="toggleFollow('${targetUser}')">
+    ${isFollowing?'Seguindo':'Seguir'}
+  </button>` : '';
+  const chatBtn = mutual ? `<a href="chat?with=${encodeURIComponent(targetUser)}" class="btn-chat-link">Chat</a>` : '';
+
+  wrap.innerHTML = `
+  <div class="profile-banner">${bannerInner}</div>
+  <div class="profile-header">
+    <div class="profile-av-wrap">
+      <div class="profile-av" style="background:${avatarColor}">${avContent}</div>
+    </div>
+    <div class="profile-info">
+      <div class="profile-name-row">
+        <h1 class="profile-name" style="color:${nameColor}">${escHtml(targetUser)} ${user.isVerified?'<span style="color:#1e90ff">✅</span>':''}</h1>
+        <div class="uid-tag">#${(user.id||uid).slice(0,8)}</div>
+      </div>
+      ${badgesHtml}
+      <p class="profile-bio">${escHtml(bio)}</p>
+      <div class="profile-stats-row">
+        <div class="pstat"><span>${userPosts.length}</span><small>Scripts</small></div>
+        <div class="pstat"><span>${totalViews}</span><small>Views</small></div>
+        <div class="pstat"><span>${(user.following||[]).length}</span><small>Seguindo</small></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap">
+        ${followBtn}${chatBtn}
+      </div>
+    </div>
+    ${isOwn?`<button class="btn-edit-profile" onclick="openEditModal()"><i class="fas fa-paint-brush"></i> Editar</button>`:''}
+  </div>
+  <div class="profile-scripts">
+    <h2 class="feed-title"><i class="fas fa-code" style="color:var(--primary)"></i> Scripts de ${escHtml(targetUser)}</h2>
+    <div class="script-grid" id="profileGrid"></div>
+  </div>`;
+
+  const grid = document.getElementById('profileGrid');
+  if (!userPosts.length) { grid.innerHTML='<p style="color:#555">Nenhum script publicado ainda.</p>'; }
+  else { grid.innerHTML = userPosts.map(p => buildCard(p, isOwn)).join(''); }
+
+  initMusic(user);
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function buildCard(p, isOwn){
+  const tags=(p.tags||[]).slice(0,3).map(t=>`<span class="tag-chip">${escHtml(t)}</span>`).join('');
+  const img=p.image?`<div class="card-img"><img src="${escHtml(p.image)}" onerror="this.parentElement.style.display='none'"/></div>`:'';
+  return `<div class="script-card" style="position:relative">
+    ${isOwn?`<button class="btn-delete-script" onclick="deletePost('${p.id}')"><i class="fas fa-trash"></i></button>`:''}
+    <div onclick="location.href='script?id=${p.id}'" style="cursor:pointer">
+      ${img}
+      <div class="card-body">
+        <div class="card-game"><i class="fas fa-gamepad"></i> ${escHtml(p.game||'Universal')}</div>
+        <div class="card-title">${escHtml(p.title)}</div>
+        <div class="card-tags">${tags}</div>
+        <div class="card-footer">
+          <span class="card-views"><i class="fas fa-eye"></i> ${p.views||0}</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Music Player
+const audio = document.getElementById('profileAudio');
+function initMusic(user) {
+  if (!user.profileMusic) return;
+  document.getElementById('musicPlayer').style.display = 'flex';
+  if (user.avatarURL) document.getElementById('mpArt').innerHTML = `<img src='${user.avatarURL}'>`;
+  document.getElementById('mpName').textContent = user.username + ' — música';
+  audio.src = user.profileMusic;
+  audio.volume = 0.7;
+  audio.play().catch(() => {
+    document.getElementById('mpPlayBtn').innerHTML = '<i class="fas fa-play"></i>';
+    document.getElementById('mpEq').classList.add('paused');
+  });
+  audio.addEventListener('timeupdate', () => {
+    if (audio.duration) document.getElementById('mpBarFill').style.width = (audio.currentTime/audio.duration*100)+'%';
+  });
+  document.getElementById('mpBarWrap').addEventListener('click', e => {
+    const r = e.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((e.clientX-r.left)/r.width)*audio.duration;
+  });
+}
+function toggleMusic(){
+  const btn=document.getElementById('mpPlayBtn'),eq=document.getElementById('mpEq');
+  if(audio.paused){audio.play();btn.innerHTML='<i class="fas fa-pause"></i>';eq.classList.remove('paused');}
+  else{audio.pause();btn.innerHTML='<i class="fas fa-play"></i>';eq.classList.add('paused');}
+}
+function toggleMute(){
+  audio.muted=!audio.muted;
+  document.getElementById('mpMuteBtn').innerHTML=audio.muted?'<i class="fas fa-volume-mute"></i>':'<i class="fas fa-volume-up"></i>';
+}
+function setVolume(v){ audio.volume=v; audio.muted=false; }
+
+// Aguarda Firebase auth e renderiza
+auth.onAuthStateChanged(() => renderProfile());
+</script>
 
 function handleFile(input, targetId) {
   const file = input.files[0];

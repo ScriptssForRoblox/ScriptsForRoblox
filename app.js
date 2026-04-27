@@ -481,6 +481,11 @@ function initNavbar() {
     }
     if (_currentUser.id === '937937001112555531') startRgbName();
     renderNotifPanel();
+
+    // Corrige link do perfil na navbar
+    document.querySelectorAll('a[href="profile"]').forEach(a => {
+      a.href = `profile?user=${encodeURIComponent(_currentUser.username)}`;
+    });
   } else {
     guest.style.display  = 'flex';
     logged.style.display = 'none';
@@ -526,6 +531,16 @@ function initParticles() {
 }
 
 // ---- Init (aguarda Firebase Auth) ----
+// Mostra navbar imediatamente com cache local para evitar flash de "deslogado"
+const _cachedUID = localStorage.getItem('sd_uid');
+const _cachedUser = localStorage.getItem('sd_user');
+if (_cachedUID && _cachedUser) {
+  try {
+    _currentUser = JSON.parse(_cachedUser);
+    initNavbar(); // renderiza navbar imediatamente com cache
+  } catch(e) {}
+}
+
 auth.onAuthStateChanged(async (firebaseUser) => {
   if (firebaseUser) {
     const profile = await DB.get(`users/${firebaseUser.uid}`);
@@ -536,9 +551,14 @@ auth.onAuthStateChanged(async (firebaseUser) => {
         await DB.update(`users/${firebaseUser.uid}`, { id: '937937001112555531' });
         _currentUser.id = '937937001112555531';
       }
+      // Salva cache local
+      localStorage.setItem('sd_uid', firebaseUser.uid);
+      localStorage.setItem('sd_user', JSON.stringify(_currentUser));
     }
   } else {
     _currentUser = null;
+    localStorage.removeItem('sd_uid');
+    localStorage.removeItem('sd_user');
   }
 
   initNavbar();
