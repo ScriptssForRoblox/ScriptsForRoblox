@@ -1,258 +1,69 @@
 <!DOCTYPE html>
-<html lang="pt-BR Eng">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Perfil — ScriptDrop</title>
-
-<!-- Open Graph / Discord Rich Embed -->
 <meta property="og:type" content="profile">
 <meta property="og:site_name" content="⚡ ScriptDrop">
 <meta property="og:title" content="Ver Perfil — ScriptDrop">
-<meta property="og:description" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop 🚀">
+<meta property="og:description" content="Confira os scripts deste usuário na comunidade ScriptDrop">
 <meta property="og:image" content="https://scriptssforroblox.github.io/ScriptsForRoblox/preview.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:url" content="https://scriptssforroblox.github.io/ScriptsForRoblox/profile">
 <meta name="theme-color" content="#7c6af7">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Ver Perfil — ScriptDrop">
-<meta name="twitter:description" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop 🚀">
-<meta name="twitter:image" content="https://scriptssforroblox.github.io/ScriptsForRoblox/preview.png">
-
 <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
 <link rel="stylesheet" href="style.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="icons.js" defer></script>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="firebase.js"></script>
-</head>
 <style>
-  :root {
-    --glass: rgba(22, 22, 22, 0.8);
-    --border: rgba(255, 255, 255, 0.1);
-    --primary: #7c6af7;
-  }
-  
-  body { background: #050505; }
-
-  #profileWrap {
-    animation: fadeUp 0.8s ease;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 0 60px 0;
-  }
-
-  .profile-banner {
-    height: 320px !important;
-    background: linear-gradient(135deg, #121212, #000);
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-    width: 100%;
-    position: relative;
-  }
-  .profile-banner img, .profile-banner video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 0; left: 0;
-  }
-  .profile-banner::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 60%;
-    background: linear-gradient(to bottom, transparent, #050505);
-    pointer-events: none;
-  }
-
-  .profile-header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 40px;
-    gap: 35px;
-    margin: -100px 20px 0 20px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-    position: relative;
-    z-index: 10;
-  }
-
-  .profile-av-wrap { flex-shrink: 0; }
-
-  .profile-av {
-    width: 160px !important;
-    height: 160px !important;
-    border-radius: 40px !important;
-    border: 6px solid #161616 !important;
-    font-size: 3rem !important;
-    background: var(--primary);
-    color: #fff;
-    font-weight: 800;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    flex-shrink: 0;
-    transition: transform 0.3s ease;
-  }
-  .profile-av:hover { transform: scale(1.05) rotate(-2deg); }
-  .profile-av img { width: 100%; height: 100%; object-fit: cover; }
-
-  .profile-info { flex-grow: 1; }
-  
-  .profile-name-row { 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; 
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  
-  .profile-name { font-size: 2.8rem; font-weight: 950; margin: 0; line-height: 1; letter-spacing: -1px; }
-  .profile-badge { background: linear-gradient(135deg, var(--primary), #a855f7); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(124, 106, 247, 0.3); }
-  
-  .profile-bio { color: #888; font-size: 1.1rem; margin-bottom: 25px; max-width: 650px; line-height: 1.6; }
-
-  .profile-stats-row { display: flex; gap: 30px; }
-  .pstat { display: flex; flex-direction: column; align-items: flex-start; }
-  .pstat span { font-size: 1.5rem; font-weight: 900; color: #fff; line-height: 1.2; }
-  .pstat small { color: #444; text-transform: uppercase; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; }
-
-  .btn-edit-profile {
-    background: rgba(124, 106, 247, 0.1);
-    border: 1px solid var(--border);
-    color: #fff;
-    display: flex; align-items: center; gap: 8px;
-    padding: 12px 20px;
-    border-radius: 12px;
-    height: fit-content;
-    font-weight: 700;
-  }
-  .btn-edit-profile:hover { background: var(--primary); transform: translateY(-3px); }
-
-  /* Discord Badge & Tooltip */
-  .discord-badge { 
-    background: #5865F2; 
-    color: #fff; 
-    padding: 6px 12px; 
-    border-radius: 8px; 
-    font-size: 0.8rem; 
-    font-weight: 800; 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
-    cursor: help;
-    position: relative;
-  }
-  .discord-badge::after {
-    content: "Badge ganha ao conectar sua conta com o Bot oficial do ScriptDrop!";
-    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
-    background: #111; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.7rem;
-    width: 180px; text-align: center; opacity: 0; visibility: hidden; transition: 0.3s; z-index: 100; border: 1px solid var(--border);
-  }
-  .discord-badge:hover::after { opacity: 1; visibility: visible; }
-
-  /* Discord Card abaixo da Bio */
-  .discord-info-card {
-    display: flex; align-items: center; gap: 12px;
-    background: rgba(88, 101, 242, 0.1);
-    border: 1px solid rgba(88, 101, 242, 0.2);
-    padding: 8px 16px; border-radius: 50px;
-    width: fit-content; margin-top: 15px;
-    animation: fadeIn 0.5s ease;
-  }
-  .discord-info-card img { width: 24px; height: 24px; border-radius: 50%; }
-  .discord-info-card span { font-size: 0.9rem; font-weight: 600; color: #dee2e6; }
-
-  .profile-scripts { margin-top: 50px; padding: 0 20px; }
-  .profile-scripts .feed-title { margin-bottom: 30px; font-size: 1.8rem; }
-
+  body { background:#050505; }
+  #profileWrap { max-width:1100px; margin:0 auto; padding:0 0 60px; }
+  .profile-banner { height:320px; background:linear-gradient(135deg,#121212,#000); overflow:hidden; width:100%; position:relative; }
+  .profile-banner img, .profile-banner video { width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0; }
+  .profile-banner::after { content:'';position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to bottom,transparent,#050505);pointer-events:none; }
+  .profile-header { display:flex;flex-direction:row;align-items:center;background:rgba(22,22,22,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:40px;gap:35px;margin:-100px 20px 0;box-shadow:0 25px 50px rgba(0,0,0,0.6);position:relative;z-index:10; }
+  .profile-av { width:160px;height:160px;border-radius:40px;border:6px solid #161616;font-size:3rem;background:#7c6af7;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;transition:transform .3s; }
+  .profile-av:hover { transform:scale(1.05) rotate(-2deg); }
+  .profile-av img { width:100%;height:100%;object-fit:cover; }
+  .profile-info { flex-grow:1; }
+  .profile-name-row { display:flex;align-items:center;gap:15px;margin-bottom:12px;flex-wrap:wrap; }
+  .profile-name { font-size:2.8rem;font-weight:950;margin:0;line-height:1;letter-spacing:-1px; }
+  .profile-bio { color:#888;font-size:1.1rem;margin-bottom:25px;max-width:650px;line-height:1.6; }
+  .profile-stats-row { display:flex;gap:30px; }
+  .pstat { display:flex;flex-direction:column; }
+  .pstat span { font-size:1.5rem;font-weight:900;color:#fff; }
+  .pstat small { color:#444;text-transform:uppercase;font-size:.7rem;font-weight:800;letter-spacing:1px; }
+  .badges-row { display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap; }
+  .badge-item { display:flex;align-items:center;justify-content:center;width:28px;height:28px; }
+  .btn-edit-profile { background:rgba(124,106,247,.1);border:1px solid rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;height:fit-content;font-weight:700;cursor:pointer; }
+  .btn-edit-profile:hover { background:#7c6af7; }
+  .profile-scripts { margin-top:50px;padding:0 20px; }
+  .uid-tag { background:#1a1a1a;border:1px solid #333;color:#666;padding:4px 10px;border-radius:6px;font-size:.75rem;font-family:monospace; }
   /* Music Player */
-  #musicPlayer {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 999;
-    background: rgba(15,15,15,0.92);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(124,106,247,0.3);
-    border-radius: 18px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,106,247,0.1);
-    min-width: 220px;
-    animation: fadeUp 0.4s ease;
-  }
-  #musicPlayer .mp-art {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    background: linear-gradient(135deg,#7c6af7,#a855f7);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; flex-shrink: 0;
-    overflow: hidden;
-  }
-  #musicPlayer .mp-art img { width:100%;height:100%;object-fit:cover; }
-  #musicPlayer .mp-info { flex: 1; min-width: 0; }
-  #musicPlayer .mp-name {
-    font-size: 0.78rem; font-weight: 700; color: #fff;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 110px;
-  }
-  #musicPlayer .mp-bar-wrap {
-    width: 100%; height: 3px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 2px; margin-top: 5px; cursor: pointer; position: relative;
-  }
-  #musicPlayer .mp-bar-fill {
-    height: 100%; background: var(--primary);
-    border-radius: 2px; width: 0%; transition: width 0.3s linear;
-  }
-  #musicPlayer .mp-controls { display: flex; align-items: center; gap: 8px; }
-  #musicPlayer .mp-btn {
-    background: none; border: none; color: #aaa;
-    cursor: pointer; font-size: 1rem; padding: 4px;
-    transition: color 0.2s;
-  }
-  #musicPlayer .mp-btn:hover { color: #fff; }
-  #musicPlayer .mp-btn.active { color: var(--primary); }
-  #musicPlayer .mp-vol {
-    width: 60px; height: 3px;
-    accent-color: var(--primary);
-    cursor: pointer;
-  }
-  #musicPlayer .mp-eq {
-    display: flex; align-items: flex-end; gap: 2px; height: 16px;
-  }
-  #musicPlayer .mp-eq span {
-    width: 3px; background: var(--primary); border-radius: 2px;
-    animation: eq 0.8s ease-in-out infinite alternate;
-  }
-  #musicPlayer .mp-eq span:nth-child(2) { animation-delay: 0.2s; }
-  #musicPlayer .mp-eq span:nth-child(3) { animation-delay: 0.4s; }
-  #musicPlayer .mp-eq.paused span { animation-play-state: paused; }
-  @keyframes eq {
-    from { height: 4px; } to { height: 14px; }
-  }
-
-  @media (max-width: 800px) {
-    .profile-header { flex-direction: column; align-items: center; text-align: center; gap: 20px; padding: 30px; }
-    .profile-stats-row { justify-content: center; gap: 40px; }
-    .profile-name-row { justify-content: center; }
-  }
+  #musicPlayer { position:fixed;bottom:24px;right:24px;z-index:999;background:rgba(15,15,15,.92);backdrop-filter:blur(20px);border:1px solid rgba(124,106,247,.3);border-radius:18px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:220px; }
+  .mp-art { width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#7c6af7,#a855f7);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;overflow:hidden; }
+  .mp-art img { width:100%;height:100%;object-fit:cover; }
+  .mp-info { flex:1;min-width:0; }
+  .mp-name { font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px; }
+  .mp-bar-wrap { width:100%;height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:5px;cursor:pointer; }
+  .mp-bar-fill { height:100%;background:#7c6af7;border-radius:2px;width:0%;transition:width .3s linear; }
+  .mp-controls { display:flex;align-items:center;gap:8px; }
+  .mp-btn { background:none;border:none;color:#aaa;cursor:pointer;font-size:1rem;padding:4px; }
+  .mp-btn:hover { color:#fff; }
+  .mp-btn.active { color:#7c6af7; }
+  .mp-vol { width:60px;height:3px;accent-color:#7c6af7;cursor:pointer; }
+  .mp-eq { display:flex;align-items:flex-end;gap:2px;height:16px; }
+  .mp-eq span { width:3px;background:#7c6af7;border-radius:2px;animation:eq .8s ease-in-out infinite alternate; }
+  .mp-eq span:nth-child(2){animation-delay:.2s}.mp-eq span:nth-child(3){animation-delay:.4s}
+  .mp-eq.paused span { animation-play-state:paused; }
+  @keyframes eq { from{height:4px} to{height:14px} }
+  @media(max-width:800px){.profile-header{flex-direction:column;align-items:center;text-align:center;gap:20px;padding:30px}.profile-stats-row{justify-content:center}.profile-name-row{justify-content:center}}
 </style>
+</head>
 <body>
 <canvas id="particles"></canvas>
 
@@ -280,7 +91,7 @@
           <span id="navName"></span>
           <i class="fas fa-chevron-down nav-chev"></i>
           <div class="nav-dropdown" id="navDropdown">
-            <a href="profile"><i class="fas fa-user"></i> Meu Perfil</a>
+            <a id="navProfileLink" href="profile"><i class="fas fa-user"></i> Meu Perfil</a>
             <a href="settings"><i class="fas fa-cog"></i> Configurações</a>
             <div class="dd-divider"></div>
             <a onclick="logout()" style="color:#ff6b6b;cursor:pointer"><i class="fas fa-sign-out-alt"></i> Sair</a>
@@ -291,7 +102,7 @@
   </div>
 </nav>
 
-<div id="profileWrap"></div>
+<div id="profileWrap"><div style="text-align:center;padding:100px;color:#555"><i class="fas fa-spinner fa-spin" style="font-size:2rem"></i></div></div>
 
 <!-- EDIT MODAL -->
 <div class="modal-bg" id="editModal">
@@ -303,7 +114,7 @@
     <div class="modal-body">
       <div class="fg"><label>Bio</label><input id="editBio" placeholder="Fale sobre você..."/></div>
       <div class="fg"><label>URL do Avatar</label><input id="editAvatarURL" placeholder="https://..."/></div>
-      <div class="fg"><label>URL do Banner <span class="opt">(imagem de fundo)</span></label><input id="editBanner" placeholder="https://..."/></div>
+      <div class="fg"><label>URL do Banner</label><input id="editBanner" placeholder="https://..."/></div>
       <div class="fg"><label>Cor do Avatar</label>
         <div class="color-row">
           <input type="color" id="editColor" value="#7c6af7" class="color-pick"/>
@@ -329,7 +140,7 @@
           </div>
         </div>
       </div>
-      <button class="btn-submit" onclick="saveProfile()"><i class="fas fa-save"></i> Salvar Perfil</button>
+      <button class="btn-submit" onclick="saveProfile()"><i class="fas fa-save"></i> Salvar</button>
     </div>
   </div>
 </div>
@@ -339,9 +150,7 @@
   <div class="mp-art" id="mpArt"><i class="fas fa-music"></i></div>
   <div class="mp-info">
     <div class="mp-name" id="mpName">Música do Perfil</div>
-    <div class="mp-bar-wrap" id="mpBarWrap">
-      <div class="mp-bar-fill" id="mpBarFill"></div>
-    </div>
+    <div class="mp-bar-wrap" id="mpBarWrap"><div class="mp-bar-fill" id="mpBarFill"></div></div>
   </div>
   <div class="mp-controls">
     <div class="mp-eq" id="mpEq"><span></span><span></span><span></span></div>
@@ -350,7 +159,6 @@
     <input type="range" class="mp-vol" id="mpVol" min="0" max="1" step="0.05" value="0.7" oninput="setVolume(this.value)">
   </div>
 </div>
-
 <audio id="profileAudio" loop></audio>
 
 <footer class="footer">
@@ -362,461 +170,164 @@
 
 <script src="app.js"></script>
 <script>
-function setColor(c){ document.getElementById('editColor').value=c; }
-function setNameColor(c){ document.getElementById('editNameColor').value=c; }
-
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function setColor(c){document.getElementById('editColor').value=c;}
+function setNameColor(c){document.getElementById('editNameColor').value=c;}
 function openEditModal(){
-  const user = _currentUser;
-  if (!user) return;
-  document.getElementById('editBio').value = user.bio||'';
-  document.getElementById('editAvatarURL').value = user.avatarURL||'';
-  document.getElementById('editBanner').value = user.banner||'';
-  document.getElementById('editColor').value = user.avatarColor||'#7c6af7';
-  document.getElementById('editNameColor').value = user.nameColor||'#ffffff';
+  if(!_currentUser)return;
+  document.getElementById('editBio').value=_currentUser.bio||'';
+  document.getElementById('editAvatarURL').value=_currentUser.avatarURL||'';
+  document.getElementById('editBanner').value=_currentUser.banner||'';
+  document.getElementById('editColor').value=_currentUser.avatarColor||'#7c6af7';
+  document.getElementById('editNameColor').value=_currentUser.nameColor||'#ffffff';
   document.getElementById('editModal').classList.add('open');
 }
-function closeEditModal(){ document.getElementById('editModal').classList.remove('open'); }
+function closeEditModal(){document.getElementById('editModal').classList.remove('open');}
 
 async function saveProfile(){
-  if (!_currentUser) return;
-  const updates = {
-    bio: document.getElementById('editBio').value.trim(),
-    avatarURL: document.getElementById('editAvatarURL').value.trim(),
-    banner: document.getElementById('editBanner').value.trim(),
-    avatarColor: document.getElementById('editColor').value,
-    nameColor: document.getElementById('editNameColor').value,
+  if(!_currentUser)return;
+  const updates={
+    bio:document.getElementById('editBio').value.trim(),
+    avatarURL:document.getElementById('editAvatarURL').value.trim(),
+    banner:document.getElementById('editBanner').value.trim(),
+    avatarColor:document.getElementById('editColor').value,
+    nameColor:document.getElementById('editNameColor').value,
   };
-  try {
-    await DB.update(`users/${getUID()}`, updates);
-    Object.assign(_currentUser, updates);
-    localStorage.setItem('sd_user', JSON.stringify(_currentUser));
-    closeEditModal();
-    renderProfile();
-    showNotification('Perfil atualizado!');
-  } catch(e) {
-    showNotification('Erro ao salvar: ' + e.message, 'error');
-  }
+  await DB.update(`users/${getUID()}`,updates);
+  Object.assign(_currentUser,updates);
+  localStorage.setItem('sd_user',JSON.stringify(_currentUser));
+  closeEditModal();
+  renderProfile();
+  showNotification('Perfil atualizado!');
 }
 
 async function renderProfile(){
-  const params = new URLSearchParams(location.search);
-  let targetUser = params.get('user');
-  const wrap = document.getElementById('profileWrap');
-  wrap.innerHTML = '<div style="text-align:center;padding:80px;color:#555"><i class="fas fa-spinner fa-spin" style="font-size:2rem"></i></div>';
+  const params=new URLSearchParams(location.search);
+  let targetUser=params.get('user');
+  const wrap=document.getElementById('profileWrap');
 
-  // Aguarda _currentUser estar pronto
-  if (!targetUser) {
-    // Espera até 3s pelo auth
-    let waited = 0;
-    while (!_currentUser && waited < 30) { await new Promise(r=>setTimeout(r,100)); waited++; }
-    targetUser = _currentUser?.username;
+  // Se não tem ?user= na URL, espera o auth e usa o usuário logado
+  if(!targetUser){
+    let tries=0;
+    while(!_currentUser && tries<40){await new Promise(r=>setTimeout(r,100));tries++;}
+    if(!_currentUser){
+      wrap.innerHTML='<div class="sp-err"><h2>Faça login para ver seu perfil</h2><a href="login" class="btn-hero-primary">Entrar</a></div>';
+      return;
+    }
+    targetUser=_currentUser.username;
+    // Atualiza URL sem recarregar
+    history.replaceState(null,'',`profile?user=${encodeURIComponent(targetUser)}`);
   }
 
-  if (!targetUser) {
-    wrap.innerHTML = '<div class="sp-err"><h2>Faça login para ver seu perfil</h2><a href="login" class="btn-hero-primary">Entrar</a></div>';
-    return;
-  }
+  // Busca dados do usuário no Firebase
+  const uid=await DB.get(`usernames/${targetUser.toLowerCase()}`);
+  if(!uid){wrap.innerHTML='<div class="sp-err"><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>';return;}
+  const user=await DB.get(`users/${uid}`);
+  if(!user){wrap.innerHTML='<div class="sp-err"><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>';return;}
 
-  // Busca UID pelo username
-  const uid = await DB.get(`usernames/${targetUser.toLowerCase()}`);
-  if (!uid) {
-    wrap.innerHTML = '<div class="sp-err"><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>';
-    return;
-  }
+  const isOwn=_currentUser?.username===targetUser;
+  const postsData=await DB.get('posts')||{};
+  const userPosts=Object.values(postsData).filter(p=>p.author===targetUser).sort((a,b)=>b.ts-a.ts);
+  const totalViews=userPosts.reduce((a,p)=>a+(p.views||0),0);
 
-  const user = await DB.get(`users/${uid}`);
-  if (!user) {
-    wrap.innerHTML = '<div class="sp-err"><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>';
-    return;
-  }
+  document.title=`${targetUser} — ScriptDrop`;
 
-  const isOwn = _currentUser?.username === targetUser;
-  const postsData = await DB.get('posts') || {};
-  const userPosts = Object.values(postsData).filter(p => p.author === targetUser).sort((a,b) => b.ts - a.ts);
-
-  document.title = `${targetUser} — ScriptDrop`;
-
-  const avatarColor = user.avatarColor||'#7c6af7';
-  const nameColor   = user.nameColor||'#ffffff';
-  const banner      = user.banner||'';
-  const bio         = user.bio||'Sem bio ainda.';
-  const totalViews  = userPosts.reduce((a,p)=>a+(p.views||0),0);
-
-  const isVideoBanner = banner.startsWith('data:video')||banner.endsWith('.mp4')||banner.endsWith('.webm');
-  const bannerInner = banner
-    ? (isVideoBanner
-      ? `<video src='${banner}' autoplay loop muted playsinline style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'></video>`
-      : `<img src='${banner}' style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'>`)
-    : '';
+  const banner=user.banner||'';
+  const isVideo=banner.startsWith('data:video')||banner.endsWith('.mp4')||banner.endsWith('.webm');
+  const bannerInner=banner?(isVideo?`<video src='${banner}' autoplay loop muted playsinline style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'></video>`:`<img src='${banner}' style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'>`):'';
 
   // Badges
-  let badgesHtml = '<div class="badges-row">';
-  if (user.id === '937937001112555531') badgesHtml += `<div class="badge-item" title="Owner & Founder">⚡</div>`;
-  (user.badges||[]).forEach(b => {
-    const isImg = b.icon&&(b.icon.startsWith('data:')||b.icon.startsWith('http'));
-    badgesHtml += `<div class="badge-item" title="${escHtml(b.desc)}">${isImg?`<img src='${b.icon}' style='width:24px;height:24px;object-fit:cover;border-radius:4px'>`:b.icon}</div>`;
+  let badgesHtml='<div class="badges-row">';
+  if(user.id==='937937001112555531')badgesHtml+=`<div class="badge-item" title="Owner">⚡</div>`;
+  if(user.isVerified)badgesHtml+=`<div class="badge-item" title="Verificado">✅</div>`;
+  (user.badges||[]).forEach(b=>{
+    const isImg=b.icon&&(b.icon.startsWith('data:')||b.icon.startsWith('http'));
+    badgesHtml+=`<div class="badge-item" title="${esc(b.desc)}">${isImg?`<img src='${b.icon}' style='width:24px;height:24px;object-fit:cover;border-radius:4px'>`:b.icon}</div>`;
   });
-  badgesHtml += '</div>';
+  badgesHtml+='</div>';
 
-  const avContent = user.avatarURL
-    ? `<img src='${user.avatarURL}' style='width:100%;height:100%;object-fit:cover'>`
-    : targetUser.charAt(0).toUpperCase();
+  const avContent=user.avatarURL?`<img src='${user.avatarURL}' style='width:100%;height:100%;object-fit:cover'>`:targetUser.charAt(0).toUpperCase();
 
-  // Follow button
-  const myFollowing = _currentUser?.following || [];
-  const isFollowing = myFollowing.includes(targetUser);
-  const mutual = isOwn ? false : await isMutualFollow(_currentUser?.username||'', targetUser);
-  const followBtn = !isOwn && _currentUser ? `<button class="btn-follow ${isFollowing?'following':''}" onclick="toggleFollow('${targetUser}')">
-    ${isFollowing?'Seguindo':'Seguir'}
-  </button>` : '';
-  const chatBtn = mutual ? `<a href="chat?with=${encodeURIComponent(targetUser)}" class="btn-chat-link">Chat</a>` : '';
+  // Follow
+  const isFollowing=(_currentUser?.following||[]).includes(targetUser);
+  const followBtn=!isOwn&&_currentUser?`<button class="btn-follow ${isFollowing?'following':''}" onclick="toggleFollow('${targetUser}')" style="margin-top:15px">${isFollowing?'✓ Seguindo':'+ Seguir'}</button>`:'';
 
-  wrap.innerHTML = `
+  wrap.innerHTML=`
   <div class="profile-banner">${bannerInner}</div>
   <div class="profile-header">
     <div class="profile-av-wrap">
-      <div class="profile-av" style="background:${avatarColor}">${avContent}</div>
+      <div class="profile-av" style="background:${user.avatarColor||'#7c6af7'}">${avContent}</div>
     </div>
     <div class="profile-info">
       <div class="profile-name-row">
-        <h1 class="profile-name" style="color:${nameColor}">${escHtml(targetUser)} ${user.isVerified?'<span style="color:#1e90ff">✅</span>':''}</h1>
+        <h1 class="profile-name" style="color:${user.nameColor||'#fff'}">${esc(targetUser)}</h1>
         <div class="uid-tag">#${(user.id||uid).slice(0,8)}</div>
       </div>
       ${badgesHtml}
-      <p class="profile-bio">${escHtml(bio)}</p>
+      <p class="profile-bio">${esc(user.bio||'Sem bio ainda.')}</p>
       <div class="profile-stats-row">
         <div class="pstat"><span>${userPosts.length}</span><small>Scripts</small></div>
         <div class="pstat"><span>${totalViews}</span><small>Views</small></div>
         <div class="pstat"><span>${(user.following||[]).length}</span><small>Seguindo</small></div>
       </div>
-      <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap">
-        ${followBtn}${chatBtn}
-      </div>
+      ${followBtn}
     </div>
     ${isOwn?`<button class="btn-edit-profile" onclick="openEditModal()"><i class="fas fa-paint-brush"></i> Editar</button>`:''}
   </div>
   <div class="profile-scripts">
-    <h2 class="feed-title"><i class="fas fa-code" style="color:var(--primary)"></i> Scripts de ${escHtml(targetUser)}</h2>
+    <h2 class="feed-title"><i class="fas fa-code" style="color:#7c6af7"></i> Scripts de ${esc(targetUser)}</h2>
     <div class="script-grid" id="profileGrid"></div>
   </div>`;
 
-  const grid = document.getElementById('profileGrid');
-  if (!userPosts.length) { grid.innerHTML='<p style="color:#555">Nenhum script publicado ainda.</p>'; }
-  else { grid.innerHTML = userPosts.map(p => buildCard(p, isOwn)).join(''); }
+  const grid=document.getElementById('profileGrid');
+  if(!userPosts.length){grid.innerHTML='<p style="color:#555">Nenhum script publicado ainda.</p>';}
+  else{grid.innerHTML=userPosts.map(p=>buildCard(p,isOwn)).join('');}
 
   initMusic(user);
 }
 
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function buildCard(p, isOwn){
-  const tags=(p.tags||[]).slice(0,3).map(t=>`<span class="tag-chip">${escHtml(t)}</span>`).join('');
-  const img=p.image?`<div class="card-img"><img src="${escHtml(p.image)}" onerror="this.parentElement.style.display='none'"/></div>`:'';
+function buildCard(p,isOwn){
+  const tags=(p.tags||[]).slice(0,3).map(t=>`<span class="tag-chip">${esc(t)}</span>`).join('');
+  const img=p.image?`<div class="card-img"><img src="${esc(p.image)}" onerror="this.parentElement.style.display='none'"/></div>`:'';
   return `<div class="script-card" style="position:relative">
     ${isOwn?`<button class="btn-delete-script" onclick="deletePost('${p.id}')"><i class="fas fa-trash"></i></button>`:''}
     <div onclick="location.href='script?id=${p.id}'" style="cursor:pointer">
       ${img}
       <div class="card-body">
-        <div class="card-game"><i class="fas fa-gamepad"></i> ${escHtml(p.game||'Universal')}</div>
-        <div class="card-title">${escHtml(p.title)}</div>
+        <div class="card-game"><i class="fas fa-gamepad"></i> ${esc(p.game||'Universal')}</div>
+        <div class="card-title">${esc(p.title)}</div>
         <div class="card-tags">${tags}</div>
-        <div class="card-footer">
-          <span class="card-views"><i class="fas fa-eye"></i> ${p.views||0}</span>
-        </div>
+        <div class="card-footer"><span class="card-views"><i class="fas fa-eye"></i> ${p.views||0}</span></div>
       </div>
     </div>
   </div>`;
 }
 
 // Music Player
-const audio = document.getElementById('profileAudio');
-function initMusic(user) {
-  if (!user.profileMusic) return;
-  document.getElementById('musicPlayer').style.display = 'flex';
-  if (user.avatarURL) document.getElementById('mpArt').innerHTML = `<img src='${user.avatarURL}'>`;
-  document.getElementById('mpName').textContent = user.username + ' — música';
-  audio.src = user.profileMusic;
-  audio.volume = 0.7;
-  audio.play().catch(() => {
-    document.getElementById('mpPlayBtn').innerHTML = '<i class="fas fa-play"></i>';
-    document.getElementById('mpEq').classList.add('paused');
-  });
-  audio.addEventListener('timeupdate', () => {
-    if (audio.duration) document.getElementById('mpBarFill').style.width = (audio.currentTime/audio.duration*100)+'%';
-  });
-  document.getElementById('mpBarWrap').addEventListener('click', e => {
-    const r = e.currentTarget.getBoundingClientRect();
-    audio.currentTime = ((e.clientX-r.left)/r.width)*audio.duration;
-  });
+const audio=document.getElementById('profileAudio');
+function initMusic(user){
+  if(!user.profileMusic)return;
+  document.getElementById('musicPlayer').style.display='flex';
+  if(user.avatarURL)document.getElementById('mpArt').innerHTML=`<img src='${user.avatarURL}'>`;
+  document.getElementById('mpName').textContent=user.username+' — música';
+  audio.src=user.profileMusic;audio.volume=0.7;
+  audio.play().catch(()=>{document.getElementById('mpPlayBtn').innerHTML='<i class="fas fa-play"></i>';document.getElementById('mpEq').classList.add('paused');});
+  audio.addEventListener('timeupdate',()=>{if(audio.duration)document.getElementById('mpBarFill').style.width=(audio.currentTime/audio.duration*100)+'%';});
+  document.getElementById('mpBarWrap').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;});
 }
-function toggleMusic(){
-  const btn=document.getElementById('mpPlayBtn'),eq=document.getElementById('mpEq');
-  if(audio.paused){audio.play();btn.innerHTML='<i class="fas fa-pause"></i>';eq.classList.remove('paused');}
-  else{audio.pause();btn.innerHTML='<i class="fas fa-play"></i>';eq.classList.add('paused');}
-}
-function toggleMute(){
-  audio.muted=!audio.muted;
-  document.getElementById('mpMuteBtn').innerHTML=audio.muted?'<i class="fas fa-volume-mute"></i>':'<i class="fas fa-volume-up"></i>';
-}
-function setVolume(v){ audio.volume=v; audio.muted=false; }
+function toggleMusic(){const b=document.getElementById('mpPlayBtn'),e=document.getElementById('mpEq');if(audio.paused){audio.play();b.innerHTML='<i class="fas fa-pause"></i>';e.classList.remove('paused');}else{audio.pause();b.innerHTML='<i class="fas fa-play"></i>';e.classList.add('paused');}}
+function toggleMute(){audio.muted=!audio.muted;document.getElementById('mpMuteBtn').innerHTML=audio.muted?'<i class="fas fa-volume-mute"></i>':'<i class="fas fa-volume-up"></i>';}
+function setVolume(v){audio.volume=v;audio.muted=false;}
 
-// Aguarda Firebase auth e renderiza
-auth.onAuthStateChanged(() => renderProfile());
-</script>
-
-function handleFile(input, targetId) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 15 * 1024 * 1024) { // Limite de 15MB
-    showNotification("Arquivo muito grande! Máximo de 15MB permitido.", "error");
-    input.value = "";
-    return;
+// Roda quando Firebase confirma auth
+auth.onAuthStateChanged(()=>{
+  // Atualiza link do perfil na navbar
+  if(_currentUser){
+    const lnk=document.getElementById('navProfileLink');
+    if(lnk)lnk.href=`profile?user=${encodeURIComponent(_currentUser.username)}`;
   }
-  const reader = new FileReader();
-  reader.onload = (e) => { document.getElementById(targetId).value = e.target.result; };
-  reader.readAsDataURL(file);
-}
-
-function saveProfile(){
-  const session = localStorage.getItem('session');
-  const users = JSON.parse(localStorage.getItem('users')||'[]');
-  const idx = users.findIndex(u=>u.username===session);
-  if(idx===-1) return;
-  users[idx].bio = document.getElementById('editBio').value.trim();
-  users[idx].avatarURL = document.getElementById('editAvatarURL').value.trim();
-  users[idx].banner = document.getElementById('editBanner').value.trim();
-  users[idx].avatarColor = document.getElementById('editColor').value;
-  users[idx].nameColor = document.getElementById('editNameColor').value;
-  users[idx].profileMusic = document.getElementById('editMusic').value.trim();
-
-  try {
-    localStorage.setItem('users', JSON.stringify(users));
-    closeEditModal();
-    renderProfile();
-    showNotification("Perfil atualizado!");
-  } catch (e) {
-    showNotification("Erro: O arquivo é muito pesado para o armazenamento do navegador. Tente um arquivo menor ou use uma URL.", "error");
-  }
-}
-
-function renderProfile(){
-  const params = new URLSearchParams(location.search);
-  let targetUser = params.get('user');
-  const session = localStorage.getItem('session');
-
-  if (!targetUser) targetUser = session;
-
-  // URL Cleaner: Transforma profile?user=alex em apenas /alex na barra de endereços
-  if (targetUser && window.history.replaceState) {
-    const cleanPath = window.location.pathname.replace(/profile(\.html)?$/, '');
-    window.history.replaceState(null, '', cleanPath + targetUser);
-  }
-
-  const isOwn = targetUser === session;
-  const users = JSON.parse(localStorage.getItem('users')||'[]');
-  const user = users.find(u=>u.username===targetUser);
-  const wrap = document.getElementById('profileWrap');
-
-  if(!user){ wrap.innerHTML='<div class="sp-err"><i class="fas fa-user-slash"></i><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>'; return; }
-
-  // ---- Atualiza Open Graph / Discord Embed ----
-  const posts = JSON.parse(localStorage.getItem('posts')||'[]');
-  const userPosts = posts.filter(p=>p.author===targetUser);
-  const ogTitle = `${targetUser} — ScriptDrop`;
-  const ogDesc = (user.bio && user.bio.trim())
-    ? `${user.bio.trim()} | ${userPosts.length} script(s) publicado(s)`
-    : `Veja o perfil de ${targetUser} no ScriptDrop — ${userPosts.length} script(s) publicado(s).`;
-  // Só usa a imagem se for URL pública (data: URLs não funcionam no Discord)
-  const ogImg = (user.avatarURL && !user.avatarURL.startsWith('data:'))
-    ? user.avatarURL
-    : (user.banner && !user.banner.startsWith('data:'))
-      ? user.banner
-      : 'https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png';
-  const ogUrl = window.location.href;
-
-  document.title = ogTitle;
-  const setMeta = (id, val) => { const el = document.getElementById(id); if(el) el.setAttribute('content', val); };
-  setMeta('og-title', ogTitle);
-  setMeta('og-desc', ogDesc);
-  setMeta('og-image', ogImg);
-  setMeta('og-url', ogUrl);
-  setMeta('tw-title', ogTitle);
-  setMeta('tw-desc', ogDesc);
-  setMeta('tw-image', ogImg);
-  // --------------------------------------------
-  const avatarColor = user.avatarColor||'#7c6af7';
-  const nameColor = user.nameColor||'#ffffff';
-  const banner = user.banner||'';
-  const bio = user.bio||'Sem bio ainda.';
-  const uid = user.id || 'N/A';
-  const totalViews = userPosts.reduce((a,p)=>a+(p.views||0),0);
-
-  const isVideoBanner = banner.startsWith('data:video') || banner.endsWith('.mp4') || banner.endsWith('.webm');
-  const bannerInner = banner
-    ? (isVideoBanner
-        ? `<video src='${banner}' autoplay loop muted playsinline style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'></video>`
-        : `<img src='${banner}' style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'>`)
-    : '';
-
-  const isAlex = session === 'Alex';
-
-  // Sistema de Badges Oficiais (Embaixo do nome)
-  let badgesHtml = '<div class="badges-row">';
-  if (uid === "937937001112555531") {
-    badgesHtml += `<div class="badge-item" title="Owner & Founder">⚡</div>`;
-  }
-  if (user.discordUser) {
-    badgesHtml += `<div class="badge-item" style="color:#5865F2" title="Usuário verificado pelo Discord"><i class="fab fa-discord"></i></div>`;
-  }
-  if (user.badges) {
-    user.badges.forEach(b => {
-      const isImg = b.icon && (b.icon.startsWith('data:') || b.icon.startsWith('http'));
-      const iconHtml = isImg
-        ? `<img src='${b.icon}' style='width:24px;height:24px;object-fit:cover;border-radius:4px;vertical-align:middle;display:inline-block'>`
-        : b.icon;
-      badgesHtml += `<div class="badge-item" title="${escapeHtml(b.desc)}">${iconHtml}</div>`;
-    });
-  }
-  badgesHtml += '</div>';
-
-  const avatarContent = user.avatarURL 
-    ? `<img src="${escapeHtml(user.avatarURL)}" style="width:100%;height:100%;object-fit:cover">`
-    : targetUser.charAt(0).toUpperCase();
-
-  wrap.innerHTML = `
-  <div class="profile-banner">${bannerInner}</div>
-    <div class="profile-header">
-      <div class="profile-av-wrap">
-        <div class="profile-av" style="background:${avatarColor}">${avatarContent}</div>
-      </div>
-      <div class="profile-info">
-        <div class="profile-name-row">
-          <h1 class="profile-name" style="color:${nameColor}">${escapeHtml(targetUser)} ${user.isVerified ? '<span style="color:#1e90ff" title="Verificado">✅</span>' : ''}</h1>
-          <div class="uid-tag" title="User ID: ${uid}"><i class="fas fa-tag"></i> #${uid}</div>
-        </div>
-        ${badgesHtml}
-        <p class="profile-bio">${escapeHtml(bio)}</p>
-        <div class="profile-stats-row">
-          <div class="pstat"><span>${userPosts.length}</span><small>Scripts</small></div>
-          <div class="pstat"><span>${totalViews}</span><small>Views</small></div>
-        </div>
-      </div>
-      ${isOwn?`<button class="btn-edit-profile" onclick="openEditModal()"><i class="fas fa-paint-brush"></i> Editar Perfil</button>`:''}
-    </div>
-    <div class="profile-scripts">
-      <h2 class="feed-title"><i class="fas fa-code" style="color:var(--primary)"></i> Scripts de ${escapeHtml(targetUser)}</h2>
-      <div class="script-grid" id="profileGrid"></div>
-    </div>`;
-
-  const grid = document.getElementById('profileGrid');
-  if(!userPosts.length){ grid.innerHTML='<p style="color:#555">Nenhum script publicado ainda.</p>'; }
-  else { grid.innerHTML = userPosts.map(p=>buildCard(p)).join(''); }
-
-  // inicia player de música
-  initMusic(user);
-}
-
-function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-// ---- Music Player ----
-const audio = document.getElementById('profileAudio');
-let musicPlaying = false;
-
-function initMusic(user) {
-  const src = user.profileMusic;
-  if (!src) return;
-  const player = document.getElementById('musicPlayer');
-  player.style.display = 'flex';
-
-  // avatar do usuário como arte
-  if (user.avatarURL) {
-    document.getElementById('mpArt').innerHTML = `<img src='${user.avatarURL}'>`;
-  }
-  document.getElementById('mpName').textContent = user.username + ' — música do perfil';
-
-  audio.src = src;
-  audio.volume = 0.7;
-  audio.play().then(() => {
-    musicPlaying = true;
-    document.getElementById('mpEq').classList.remove('paused');
-  }).catch(() => {
-    // autoplay bloqueado pelo browser — aguarda interação
-    musicPlaying = false;
-    document.getElementById('mpPlayBtn').innerHTML = '<i class="fas fa-play"></i>';
-    document.getElementById('mpEq').classList.add('paused');
-  });
-
-  audio.addEventListener('timeupdate', () => {
-    if (!audio.duration) return;
-    document.getElementById('mpBarFill').style.width = (audio.currentTime / audio.duration * 100) + '%';
-  });
-
-  document.getElementById('mpBarWrap').addEventListener('click', (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-  });
-}
-
-function toggleMusic() {
-  const btn = document.getElementById('mpPlayBtn');
-  const eq = document.getElementById('mpEq');
-  if (audio.paused) {
-    audio.play();
-    musicPlaying = true;
-    btn.innerHTML = '<i class="fas fa-pause"></i>';
-    eq.classList.remove('paused');
-  } else {
-    audio.pause();
-    musicPlaying = false;
-    btn.innerHTML = '<i class="fas fa-play"></i>';
-    eq.classList.add('paused');
-  }
-}
-
-function toggleMute() {
-  const btn = document.getElementById('mpMuteBtn');
-  audio.muted = !audio.muted;
-  btn.innerHTML = audio.muted
-    ? '<i class="fas fa-volume-mute"></i>'
-    : '<i class="fas fa-volume-up"></i>';
-  btn.classList.toggle('active', audio.muted);
-}
-
-function setVolume(v) {
-  audio.volume = v;
-  audio.muted = false;
-  const btn = document.getElementById('mpMuteBtn');
-  btn.innerHTML = v == 0 ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-  btn.classList.toggle('active', v == 0);
-}
-function buildCard(p){
-  const tags=(p.tags||[]).slice(0,3).map(t=>`<span class="tag-chip">${escapeHtml(t)}</span>`).join('');
-  const img=p.image?`<div class="card-img"><img src="${escapeHtml(p.image)}" onerror="this.parentElement.style.display='none'"/></div>`:'';
-  
-  // Verifica se o dono do perfil é o dono do script para mostrar o botão de deletar
-  const session = localStorage.getItem('session');
-  const params = new URLSearchParams(location.search);
-  const isOwnProfile = (params.get('user') || session) === session;
-
-  return `
-  <div class="script-card">
-    ${isOwnProfile ? `<button class="btn-delete-script" onclick="deletePost(${p.id})"><i class="fas fa-trash"></i></button>` : ''}
-    <div onclick="location.href='script?id=${p.id}'" style="cursor:pointer">
-    ${img}
-    <div class="card-body">
-      <div class="card-game"><i class="fas fa-gamepad"></i> ${escapeHtml(p.game||'Universal')}</div>
-      <div class="card-title">${escapeHtml(p.title)}</div>
-      <div class="card-tags">${tags}</div>
-      <div class="card-footer">
-        <span class="card-author"><i class="fas fa-user"></i> ${escapeHtml(p.author)}</span>
-        <span class="card-views"><i class="fas fa-eye"></i> ${p.views||0}</span>
-      </div>
-    </div>
-    </div>
-  </div>`;
-}
-
-renderProfile();
+  renderProfile();
+});
 </script>
 </body>
 </html>
