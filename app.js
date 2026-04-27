@@ -1,14 +1,4 @@
 // ---- Helpers ----
-function getUsers() { return JSON.parse(localStorage.getItem('users') || '[]'); }
-function saveUsers(u) { localStorage.setItem('users', JSON.stringify(u)); }
-function getPosts() { return JSON.parse(localStorage.getItem('posts') || '[]'); }
-function savePosts(p) { localStorage.setItem('posts', JSON.stringify(p)); }
-function getComments() { return JSON.parse(localStorage.getItem('comments') || '[]'); }
-function saveComments(c) { localStorage.setItem('comments', JSON.stringify(c)); }
-function getSession() { return localStorage.getItem('session'); }
-function setSession(u) { localStorage.setItem('session', u); }
-function clearSession() { localStorage.removeItem('session'); }
-
 function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -22,7 +12,6 @@ function timeAgo(ts) {
   return Math.floor(diff / 86400) + 'd atrás';
 }
 
-// ---- Toast ----
 function showNotification(msg, type = 'success') {
   let container = document.getElementById('notif-container');
   if (!container) {
@@ -37,45 +26,113 @@ function showNotification(msg, type = 'success') {
   container.appendChild(notif);
   setTimeout(() => {
     notif.style.opacity = '0';
-    notif.style.transform = 'translate(0, -20px)';
+    notif.style.transform = 'translate(0,-20px)';
     setTimeout(() => notif.remove(), 500);
   }, 4000);
 }
 
-// ---- In-App Notifications ----
-function getNotifs() { return JSON.parse(localStorage.getItem('notifs') || '{}'); }
-function saveNotifs(n) { localStorage.setItem('notifs', JSON.stringify(n)); }
+// ---- Session (Firebase Auth) ----
+let _currentUser = null; // { uid, username, ...profile }
 
-function pushNotif(toUser, type, msg, link) {
-  const all = getNotifs();
-  if (!all[toUser]) all[toUser] = [];
-  all[toUser].unshift({ id: Date.now(), type, msg, link, read: false, ts: Date.now() });
-  all[toUser] = all[toUser].slice(0, 50);
-  saveNotifs(all);
+function getSession() { return _currentUser?.username || null; }
+function getUID()     { return _currentUser?.uid || null; }
+
+// ---- Auth ----
+async function register() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm  = document.getElementById('confirm').value;
+  const error    = document.getElementById('error');
+
+  if (!username || !password) return (error.textContent = 'Preencha todos os campos.');
+  if (password !== confirm)   return (error.textContent = 'Senhas não coincidem.');
+  if (password.length < 6)   return (error.textContent = 'Senha mínimo 6 caracteres.');
+
+  // Verifica se username já existe
+  const existing = await DB.get(`usernames/${username.toLowerCase()}`);
+  if (existing) return (error.textContent = 'Usuário já existe.');
+
+  try {
+    // Cria conta no Firebase Auth com email fake
+    const email = `${username.toLowerCase()}@scriptdrop.app`;
+    const cred  = await auth.createUserWithEmailAndPassword(email, password);
+    const uid   = cred.user.uid;
+
+    const isAlex = username.toLowerCase() === 'alex';
+    const profile = {
+      uid,
+      username,
+      avatarURL: '',
+      avatarColor: '#7c6af7',
+      nameColor: '#ffffff',
+      bio: '',
+      banner: '',
+      profileMusic: '',
+      badges: [],
+      isBanned: false,
+      canPost: true,
+      warns: 0,
+      timeoutUntil: 0,
+      following: [],
+      id: isAlex ? '937937001112555531' : uid,
+      createdAt: Date.now()
+    };
+
+    await DB.set(`users/${uid}`, profile);
+    await DB.set(`usernames/${username.toLowerCase()}`, uid);
+
+    window.location.href = './';
+  } catch(e) {
+    error.textContent = e.message;
+  }
 }
 
-function getMyNotifs() {
-  const session = getSession();
-  if (!session) return [];
-  return (getNotifs()[session] || []);
+async function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const error    = document.getElementById('error');
+
+  try {
+    const uid = await DB.get(`usernames/${username.toLowerCase()}`);
+    if (!uid) return (error.textContent = 'Usuário não encontrado.');
+
+    const email = `${username.toLowerCase()}@scriptdrop.app`;
+    await auth.signInWithEmailAndPassword(email, password);
+    window.location.href = './';
+  } catch(e) {
+    error.textContent = 'Usuário ou senha incorretos.';
+  }
 }
 
-function markNotifsRead() {
-  const session = getSession();
-  if (!session) return;
-  const all = getNotifs();
-  if (all[session]) all[session].forEach(n => n.read = true);
-  saveNotifs(all);
+function logout() {
+  auth.signOut().then(() => window.location.href = './');
 }
 
-function renderNotifPanel() {
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.querySelector('i').className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+
+// ---- Notifications ----
+async function pushNotif(toUID, type, msg, link) {
+  if (!toUID) return;
+  await DB.push(`notifs/${toUID}`, { type, msg, link, read: false, ts: Date.now() });
+}
+
+async function renderNotifPanel() {
   const panel = document.getElementById('notifPanel');
-  if (!panel) return;
-  const notifs = getMyNotifs();
-  const unread = notifs.filter(n => !n.read).length;
   const badge = document.getElementById('notifBadge');
-  if (badge) badge.textContent = unread > 0 ? unread : '';
-  if (badge) badge.style.display = unread > 0 ? 'flex' : 'none';
+  if (!panel || !_currentUser) return;
+
+  const uid = getUID();
+  const data = await DB.get(`notifs/${uid}`) || {};
+  const notifs = Object.entries(data).map(([k,v]) => ({...v, _key: k})).sort((a,b) => b.ts - a.ts).slice(0,30);
+  const unread = notifs.filter(n => !n.read).length;
+
+  if (badge) { badge.textContent = unread || ''; badge.style.display = unread > 0 ? 'flex' : 'none'; }
 
   panel.innerHTML = notifs.length ? notifs.map(n => `
     <a class="notif-entry ${n.read?'':'unread'}" href="${n.link||'#'}">
@@ -93,196 +150,185 @@ function renderNotifPanel() {
   : '<div style="padding:20px;text-align:center;color:#555;font-size:.85rem">Nenhuma notificação</div>';
 }
 
-// ---- Force Owner ----
-function fixOwnerId() {
-  let users = getUsers();
-  let alex = users.find(u => u.username.toLowerCase() === 'alex');
-  if (alex && alex.id !== "937937001112555531") {
-    alex.id = "937937001112555531";
-    alex.canPost = true;
-    alex.isBanned = false;
-    saveUsers(users);
-  }
-}
-
-// ---- Auth ----
-function register() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
-  const confirm  = document.getElementById('confirm').value;
-  const error    = document.getElementById('error');
-  if (!username || !password) return (error.textContent = 'Preencha todos os campos.');
-  if (password !== confirm)   return (error.textContent = 'Senhas não coincidem.');
-  const users = getUsers();
-  if (users.find(u => u.username === username)) return (error.textContent = 'Usuário já existe.');
-  users.push({ id: Math.floor(Math.random()*1e9).toString(), username, password, badges:[], isBanned:false, canPost:true, warns:0, timeoutUntil:0, following:[] });
-  saveUsers(users);
-  setSession(username);
-  window.location.href = './';
-}
-
-function login() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
-  const error    = document.getElementById('error');
-  const users = getUsers();
-  const user  = users.find(u => u.username === username && u.password === password);
-  if (!user) return (error.textContent = 'Usuário ou senha incorretos.');
-  setSession(username);
-  window.location.href = './';
-}
-
-function logout() { clearSession(); window.location.href = './'; }
-
-function togglePass(id, btn) {
-  const input = document.getElementById(id);
-  if (!input) return;
-  const show = input.type === 'password';
-  input.type = show ? 'text' : 'password';
-  btn.querySelector('i').className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+async function markNotifsRead() {
+  const uid = getUID();
+  if (!uid) return;
+  const data = await DB.get(`notifs/${uid}`) || {};
+  const updates = {};
+  Object.keys(data).forEach(k => { updates[`notifs/${uid}/${k}/read`] = true; });
+  if (Object.keys(updates).length) await db.ref().update(updates);
 }
 
 // ---- Follow ----
-function toggleFollow(targetUsername) {
-  const session = getSession();
-  if (!session) return showNotification("Faça login para seguir!", "error");
-  if (session === targetUsername) return;
-  let users = getUsers();
-  let me = users.find(u => u.username === session);
-  if (!me.following) me.following = [];
-  const idx = me.following.indexOf(targetUsername);
+async function toggleFollow(targetUsername) {
+  if (!_currentUser) return showNotification('Faça login para seguir!', 'error');
+  if (_currentUser.username === targetUsername) return;
+
+  const myUID = getUID();
+  const targetUID = await DB.get(`usernames/${targetUsername.toLowerCase()}`);
+  if (!targetUID) return;
+
+  const following = _currentUser.following || [];
+  const idx = following.indexOf(targetUsername);
+
   if (idx > -1) {
-    me.following.splice(idx, 1);
+    following.splice(idx, 1);
     showNotification(`Você deixou de seguir ${targetUsername}`);
   } else {
-    me.following.push(targetUsername);
+    following.push(targetUsername);
     showNotification(`Seguindo ${targetUsername}!`);
-    pushNotif(targetUsername, 'follow', `${session} começou a te seguir!`, `profile?user=${session}`);
+    await pushNotif(targetUID, 'follow', `${_currentUser.username} começou a te seguir!`, `profile?user=${_currentUser.username}`);
   }
-  saveUsers(users);
+
+  _currentUser.following = following;
+  await DB.update(`users/${myUID}`, { following });
   location.reload();
 }
 
-function isMutualFollow(a, b) {
-  const users = getUsers();
-  const ua = users.find(u => u.username === a);
-  const ub = users.find(u => u.username === b);
-  return (ua?.following||[]).includes(b) && (ub?.following||[]).includes(a);
+async function isMutualFollow(usernameA, usernameB) {
+  const uidA = await DB.get(`usernames/${usernameA.toLowerCase()}`);
+  const uidB = await DB.get(`usernames/${usernameB.toLowerCase()}`);
+  if (!uidA || !uidB) return false;
+  const a = await DB.get(`users/${uidA}`);
+  const b = await DB.get(`users/${uidB}`);
+  return (a?.following||[]).includes(usernameB) && (b?.following||[]).includes(usernameA);
 }
 
 // ---- Chat ----
-function getChatKey(a, b) { return [a,b].sort().join('::'); }
-function getChats() { return JSON.parse(localStorage.getItem('chats') || '{}'); }
-function saveChats(c) { localStorage.setItem('chats', JSON.stringify(c)); }
+function getChatKey(a, b) { return [a,b].sort().join('__'); }
 
-function sendMessage(toUser, text) {
-  const session = getSession();
-  if (!session || !text.trim()) return;
-  if (!isMutualFollow(session, toUser)) return showNotification('Vocês precisam se seguir mutuamente para conversar.', 'error');
-  const chats = getChats();
-  const key = getChatKey(session, toUser);
-  if (!chats[key]) chats[key] = [];
-  chats[key].push({ from: session, text: text.trim(), ts: Date.now() });
-  saveChats(chats);
-  pushNotif(toUser, 'msg', `${session}: ${text.trim().slice(0,40)}`, `chat?with=${session}`);
-}
+async function sendMessage(toUser, text) {
+  if (!_currentUser || !text.trim()) return;
+  const mutual = await isMutualFollow(_currentUser.username, toUser);
+  if (!mutual) return showNotification('Vocês precisam se seguir mutuamente.', 'error');
 
-function getMessages(withUser) {
-  const session = getSession();
-  if (!session) return [];
-  const key = getChatKey(session, withUser);
-  return (getChats()[key] || []);
+  const key = getChatKey(_currentUser.username, toUser);
+  await DB.push(`chats/${key}`, { from: _currentUser.username, text: text.trim(), ts: Date.now() });
+
+  const toUID = await DB.get(`usernames/${toUser.toLowerCase()}`);
+  if (toUID) await pushNotif(toUID, 'msg', `${_currentUser.username}: ${text.trim().slice(0,40)}`, `chat?with=${_currentUser.username}`);
 }
 
 // ---- Comments ----
-function addComment(postId) {
-  const session = getSession();
-  if (!session) return showNotification('Faça login para comentar!', 'error');
+async function addComment(postId) {
+  if (!_currentUser) return showNotification('Faça login para comentar!', 'error');
   const input = document.getElementById('cInput');
   const text = input?.value.trim();
   if (!text) return;
-  const comments = getComments();
-  comments.push({ id: Date.now(), postId, author: session, text, ts: Date.now() });
-  saveComments(comments);
+
+  await DB.push(`comments/${postId}`, {
+    author: _currentUser.username,
+    authorUID: getUID(),
+    text,
+    ts: Date.now()
+  });
   input.value = '';
-  // notifica dono do post
-  const post = getPosts().find(p => p.id === postId);
-  if (post && post.author !== session) {
-    pushNotif(post.author, 'comment', `${session} comentou no seu script "${post.title}"`, `script?id=${postId}`);
+
+  // Notifica dono do post
+  const post = await DB.get(`posts/${postId}`);
+  if (post && post.authorUID !== getUID()) {
+    await pushNotif(post.authorUID, 'comment', `${_currentUser.username} comentou no seu script "${post.title}"`, `script?id=${postId}`);
   }
+
   renderComments(postId);
 }
 
-function renderComments(postId) {
+async function renderComments(postId) {
   const el = document.getElementById('commentList');
   if (!el) return;
-  const comments = getComments().filter(c => c.postId === postId);
-  const users = getUsers();
-  el.innerHTML = comments.length ? comments.map(c => {
-    const u = users.find(u => u.username === c.author) || {};
+  const data = await DB.get(`comments/${postId}`) || {};
+  const comments = Object.values(data).sort((a,b) => a.ts - b.ts);
+
+  if (!comments.length) {
+    el.innerHTML = '<p style="color:#555;font-size:.85rem;padding:10px 0">Nenhum comentário ainda.</p>';
+    return;
+  }
+
+  // Busca avatares
+  const userCache = {};
+  for (const c of comments) {
+    if (!userCache[c.author]) {
+      const uid = await DB.get(`usernames/${c.author.toLowerCase()}`);
+      if (uid) userCache[c.author] = await DB.get(`users/${uid}`) || {};
+    }
+  }
+
+  el.innerHTML = comments.map(c => {
+    const u = userCache[c.author] || {};
     const av = u.avatarURL
       ? `<img src='${u.avatarURL}' style='width:100%;height:100%;object-fit:cover;border-radius:50%'>`
       : c.author.charAt(0).toUpperCase();
     return `<div class="comment-item">
       <div class="comment-av" style="background:${u.avatarColor||'#7c6af7'}">${av}</div>
       <div class="comment-body">
-        <div class="comment-author"><a href="profile?user=${encodeURIComponent(c.author)}">${escapeHtml(c.author)}</a> <span class="comment-time">${timeAgo(c.ts)}</span></div>
+        <div class="comment-author"><a href="profile?user=${encodeURIComponent(c.author)}">${escapeHtml(c.author)}</a><span class="comment-time">${timeAgo(c.ts)}</span></div>
         <div class="comment-text">${escapeHtml(c.text)}</div>
       </div>
     </div>`;
-  }).join('') : '<p style="color:#555;font-size:.85rem;padding:10px 0">Nenhum comentário ainda. Seja o primeiro!</p>';
+  }).join('');
 }
 
 // ---- Moderation ----
-function verifyUser(userId) {
+async function verifyUser(targetUID) {
   if (getSession() !== 'Alex') return;
-  let users = getUsers();
-  const idx = users.findIndex(u => u.id === userId);
-  if (idx !== -1) { users[idx].isVerified = !users[idx].isVerified; saveUsers(users); location.reload(); }
+  const user = await DB.get(`users/${targetUID}`);
+  if (!user) return;
+  await DB.update(`users/${targetUID}`, { isVerified: !user.isVerified });
+  showNotification(user.isVerified ? 'Verificação removida.' : 'Usuário verificado!');
+  location.reload();
 }
 
-function deletePost(postId) {
-  const session = getSession();
-  let posts = getPosts();
-  const post = posts.find(p => p.id === postId);
+async function deletePost(postId) {
+  if (!_currentUser) return;
+  const post = await DB.get(`posts/${postId}`);
   if (!post) return;
-  if (post.author !== session && session !== 'Alex') return showNotification("Sem permissão!", "error");
-  if (!confirm("Deletar este script para sempre?")) return;
-  savePosts(posts.filter(p => p.id !== postId));
-  showNotification("Script deletado!");
+  if (post.authorUID !== getUID() && getSession() !== 'Alex') return showNotification('Sem permissão!', 'error');
+  if (!confirm('Deletar este script para sempre?')) return;
+  await DB.remove(`posts/${postId}`);
+  showNotification('Script deletado!');
   location.reload();
 }
 
 // ---- Modal ----
-function openPostModal() { document.getElementById('postModal')?.classList.add('open'); }
+function openPostModal()  { document.getElementById('postModal')?.classList.add('open'); }
 function closePostModal() { document.getElementById('postModal')?.classList.remove('open'); }
 
 // ---- Posts ----
-function submitPost() {
+async function submitPost() {
   const title = document.getElementById('mTitle')?.value.trim();
   const code  = document.getElementById('mCode')?.value.trim();
   const game  = document.getElementById('mGame')?.value.trim();
   const image = document.getElementById('mImage')?.value.trim();
   const desc  = document.getElementById('mDesc')?.value.trim();
   const tags  = document.getElementById('mTags')?.value.split(',').map(t=>t.trim()).filter(Boolean);
-  const session = getSession();
-  const user = getUsers().find(u => u.username === session);
-  if (!title || !code) return showNotification('Preencha o título e o script.', 'error');
-  if (user?.isBanned) return showNotification('Sua conta está banida.', 'error');
-  if (!user?.canPost) return showNotification('Seu acesso para publicar foi revogado.', 'error');
-  if (user?.timeoutUntil > Date.now()) return showNotification('Você está em timeout.', 'error');
-  const posts = getPosts();
-  posts.unshift({ id: Date.now(), title, code, game, image, desc, tags, author: session, date: new Date().toLocaleDateString('pt-BR'), ts: Date.now(), isVerifiedPost: user?.isVerified||false, views: 0 });
-  savePosts(posts);
+
+  if (!_currentUser) return showNotification('Faça login!', 'error');
+  if (!title || !code) return showNotification('Preencha título e script.', 'error');
+  if (_currentUser.isBanned) return showNotification('Sua conta está banida.', 'error');
+  if (!_currentUser.canPost) return showNotification('Você não pode postar.', 'error');
+  if (_currentUser.timeoutUntil > Date.now()) return showNotification('Você está em timeout.', 'error');
+
+  const postId = Date.now().toString();
+  await DB.set(`posts/${postId}`, {
+    id: postId, title, code, game, image, desc, tags,
+    author: _currentUser.username,
+    authorUID: getUID(),
+    date: new Date().toLocaleDateString('pt-BR'),
+    ts: Date.now(),
+    isVerifiedPost: _currentUser.isVerified || false,
+    views: 0
+  });
+
   closePostModal();
   ['mTitle','mCode','mGame','mImage','mDesc','mTags'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  showNotification('Script publicado!');
   renderFeed();
   updateStats();
 }
 
-function copyScript(id, e) {
+async function copyScript(id, e) {
   if (e) e.preventDefault();
-  const post = getPosts().find(p => p.id === id);
+  const post = await DB.get(`posts/${id}`);
   if (!post) return;
   navigator.clipboard.writeText(post.code);
 }
@@ -298,24 +344,30 @@ function setFilter(f, btn) {
 
 // ---- Global Search ----
 function globalSearch(q) {
-  if (!q || !q.trim()) return;
+  if (!q?.trim()) return;
   window.location.href = `search?q=${encodeURIComponent(q.trim())}`;
 }
 
-function liveSearch(q) {
+async function liveSearch(q) {
   const box = document.getElementById('globalSearchResults');
   if (!box) return;
   if (!q || q.length < 2) { box.classList.remove('open'); return; }
-  const posts = getPosts();
-  const users = getUsers();
+
   const ql = q.toLowerCase();
-  const matchPosts = posts.filter(p => (p.title+(p.game||'')).toLowerCase().includes(ql)).slice(0,4);
-  const matchUsers = users.filter(u => u.username.toLowerCase().includes(ql)).slice(0,3);
-  if (!matchPosts.length && !matchUsers.length) { box.classList.remove('open'); return; }
+  const [postsData, usersData] = await Promise.all([
+    DB.get('posts'),
+    DB.get('users')
+  ]);
+
+  const posts = postsData ? Object.values(postsData).filter(p => (p.title+(p.game||'')).toLowerCase().includes(ql)).slice(0,4) : [];
+  const users = usersData ? Object.values(usersData).filter(u => u.username?.toLowerCase().includes(ql)).slice(0,3) : [];
+
+  if (!posts.length && !users.length) { box.classList.remove('open'); return; }
+
   let html = '';
-  if (matchUsers.length) {
-    html += '<div class="gsr-section"><i class="fas fa-users"></i> Usuários</div>';
-    html += matchUsers.map(u => {
+  if (users.length) {
+    html += '<div class="gsr-section">Usuários</div>';
+    html += users.map(u => {
       const av = u.avatarURL ? `<img src='${u.avatarURL}'>` : u.username.charAt(0).toUpperCase();
       return `<div class="gsr-item" onclick="location.href='profile?user=${encodeURIComponent(u.username)}'">
         <div class="gsr-av" style="background:${u.avatarColor||'#7c6af7'}">${av}</div>
@@ -323,30 +375,36 @@ function liveSearch(q) {
       </div>`;
     }).join('');
   }
-  if (matchPosts.length) {
-    html += '<div class="gsr-section"><i class="fas fa-code"></i> Scripts</div>';
-    html += matchPosts.map(p => `<div class="gsr-item" onclick="location.href='script?id=${p.id}'">
-      <div class="gsr-av" style="background:#1a1a1a;border-radius:8px"><i class="fas fa-code" style="color:#7c6af7"></i></div>
+  if (posts.length) {
+    html += '<div class="gsr-section">Scripts</div>';
+    html += posts.map(p => `<div class="gsr-item" onclick="location.href='script?id=${p.id}'">
+      <div class="gsr-av" style="background:#1a1a1a">${SD.icon('code',14)}</div>
       <div><div class="gsr-name">${escapeHtml(p.title)}</div><div class="gsr-sub">${escapeHtml(p.author)} · ${escapeHtml(p.game||'Universal')}</div></div>
     </div>`).join('');
   }
+
   box.innerHTML = html;
   box.classList.add('open');
   document.addEventListener('click', () => box.classList.remove('open'), { once: true });
 }
 
 // ---- Feed ----
-function renderFeed() {
+async function renderFeed() {
   const grid = document.getElementById('scriptGrid');
   if (!grid) return;
-  let posts = getPosts();
+
   const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const data = await DB.get('posts') || {};
+  let posts = Object.values(data).sort((a,b) => b.ts - a.ts);
+
   if (q) posts = posts.filter(p => (p.title+(p.game||'')+(p.author||'')).toLowerCase().includes(q));
   if (currentFilter === 'recent') posts = posts.slice(0, 10);
+
   if (!posts.length) { grid.innerHTML = '<p class="feed-empty">Nenhum script encontrado.</p>'; return; }
+
   grid.innerHTML = posts.map(p => {
     const img = p.image
-      ? `<div class="pc-img"><img src="${escapeHtml(p.image)}" alt="cover" onerror="this.parentElement.classList.add('pc-img-err')"/></div>`
+      ? `<div class="pc-img"><img src="${escapeHtml(p.image)}" onerror="this.parentElement.classList.add('pc-img-err')"/></div>`
       : `<div class="pc-img pc-img-placeholder">${SD.icon('code',32)}</div>`;
     return `<a class="post-card" href="script?id=${p.id}">
       <div class="pc-top"><span class="pc-time">${SD.icon('recent',13)} ${timeAgo(p.ts)||p.date}</span><span class="pc-author">@${escapeHtml(p.author||'anon')}</span></div>
@@ -354,14 +412,17 @@ function renderFeed() {
       <div class="pc-bottom"><div class="pc-title">${escapeHtml(p.title)}</div><div class="pc-game">${SD.icon('gamepad',13)} ${escapeHtml(p.game||'Universal')}</div></div>
     </a>`;
   }).join('');
+
   renderRecent(posts);
   renderTagCloud(posts);
 }
 
-function renderRecent(posts) {
+async function renderRecent(posts) {
   const el = document.getElementById('recentList');
   if (!el) return;
-  el.innerHTML = posts.slice(0,5).map(p => `<a class="recent-item" href="script?id=${p.id}"><span class="ri-title">${escapeHtml(p.title)}</span><span class="ri-game">${escapeHtml(p.game||'Universal')}</span></a>`).join('') || '<p style="color:#555;font-size:.8rem">Nenhum script ainda.</p>';
+  el.innerHTML = posts.slice(0,5).map(p =>
+    `<a class="recent-item" href="script?id=${p.id}"><span class="ri-title">${escapeHtml(p.title)}</span><span class="ri-game">${escapeHtml(p.game||'Universal')}</span></a>`
+  ).join('') || '<p style="color:#555;font-size:.8rem">Nenhum script ainda.</p>';
 }
 
 function renderTagCloud(posts) {
@@ -370,53 +431,55 @@ function renderTagCloud(posts) {
   const map = {};
   posts.forEach(p => (p.tags||[]).forEach(t => { map[t]=(map[t]||0)+1; }));
   const tags = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  el.innerHTML = tags.length ? tags.map(([t]) => `<span class="tag-chip" onclick="document.getElementById('searchInput').value='${escapeHtml(t)}';renderFeed()">${escapeHtml(t)}</span>`).join('') : '<p style="color:#555;font-size:.8rem">Sem tags ainda.</p>';
+  el.innerHTML = tags.length
+    ? tags.map(([t]) => `<span class="tag-chip" onclick="document.getElementById('searchInput').value='${escapeHtml(t)}';renderFeed()">${escapeHtml(t)}</span>`).join('')
+    : '<p style="color:#555;font-size:.8rem">Sem tags ainda.</p>';
 }
 
-function updateStats() {
-  const posts = getPosts(), users = getUsers();
+async function updateStats() {
+  const [postsData, usersData] = await Promise.all([DB.get('posts'), DB.get('users')]);
+  const pc = postsData ? Object.keys(postsData).length : 0;
+  const uc = usersData ? Object.keys(usersData).length : 0;
   const visits = parseInt(localStorage.getItem('visits')||'0') + 1;
   localStorage.setItem('visits', visits);
-  ['statScripts','sideStatScripts'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=posts.length; });
-  ['statUsers','sideStatUsers'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=users.length; });
+  ['statScripts','sideStatScripts'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=pc; });
+  ['statUsers','sideStatUsers'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=uc; });
   ['statVisits','sideStatVisits'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=visits; });
 }
 
-// ---- RGB Owner name ----
+// ---- RGB Owner ----
 function startRgbName() {
   const el = document.getElementById('navName');
   if (!el) return;
   let h = 0;
-  setInterval(() => {
-    h = (h + 2) % 360;
-    el.style.color = `hsl(${h},100%,65%)`;
-  }, 30);
+  setInterval(() => { h=(h+2)%360; el.style.color=`hsl(${h},100%,65%)`; }, 30);
 }
 
 // ---- Navbar ----
 function initNavbar() {
-  const session  = getSession();
-  const guest    = document.getElementById('nav-guest');
-  const logged   = document.getElementById('nav-logged');
-  const navName  = document.getElementById('navName');
-  const navAvatar= document.getElementById('navAvatar');
-  const navAdmin = document.getElementById('navAdminBtn');
+  const guest  = document.getElementById('nav-guest');
+  const logged = document.getElementById('nav-logged');
   if (!guest || !logged) return;
 
-  if (session) {
+  if (_currentUser) {
     guest.style.display  = 'none';
     logged.style.display = 'flex';
-    if (navName) navName.textContent = session;
-    const users = getUsers();
-    const user  = users.find(u => u.username === session);
-    if (navAdmin && user?.id === "937937001112555531") navAdmin.style.display = 'flex';
+
+    const navName   = document.getElementById('navName');
+    const navAvatar = document.getElementById('navAvatar');
+    const navAdmin  = document.getElementById('navAdminBtn');
+
+    if (navName) navName.textContent = _currentUser.username;
+    if (navAdmin && _currentUser.id === '937937001112555531') navAdmin.style.display = 'flex';
     if (navAvatar) {
-      if (user?.avatarURL) navAvatar.innerHTML = `<img src="${escapeHtml(user.avatarURL)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-      else { navAvatar.textContent = session.charAt(0).toUpperCase(); navAvatar.style.background = user?.avatarColor||'#7c6af7'; }
+      if (_currentUser.avatarURL) {
+        navAvatar.innerHTML = `<img src="${escapeHtml(_currentUser.avatarURL)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+      } else {
+        navAvatar.textContent = _currentUser.username.charAt(0).toUpperCase();
+        navAvatar.style.background = _currentUser.avatarColor || '#7c6af7';
+      }
     }
-    // RGB for owner
-    if (user?.id === "937937001112555531") startRgbName();
-    // notif badge
+    if (_currentUser.id === '937937001112555531') startRgbName();
     renderNotifPanel();
   } else {
     guest.style.display  = 'flex';
@@ -430,8 +493,7 @@ function initNavbar() {
     document.addEventListener('click', () => drop.classList.remove('open'));
   }
 
-  // notif toggle
-  const notifBtn = document.getElementById('notifBtn');
+  const notifBtn   = document.getElementById('notifBtn');
   const notifPanel = document.getElementById('notifPanel');
   if (notifBtn && notifPanel) {
     notifBtn.addEventListener('click', e => {
@@ -452,22 +514,35 @@ function initParticles() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let W, H, dots = [];
-  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-  function spawn() { dots = Array.from({length:60}, () => ({ x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3, r:Math.random()*1.5+.5, a:Math.random()*.5+.1 })); }
+  function resize() { W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+  function spawn() { dots=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,a:Math.random()*.5+.1})); }
   function draw() {
     ctx.clearRect(0,0,W,H);
-    dots.forEach(d => { d.x+=d.vx; d.y+=d.vy; if(d.x<0||d.x>W)d.vx*=-1; if(d.y<0||d.y>H)d.vy*=-1; ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2); ctx.fillStyle=`rgba(124,106,247,${d.a})`; ctx.fill(); });
+    dots.forEach(d=>{d.x+=d.vx;d.y+=d.vy;if(d.x<0||d.x>W)d.vx*=-1;if(d.y<0||d.y>H)d.vy*=-1;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fillStyle=`rgba(124,106,247,${d.a})`;ctx.fill();});
     requestAnimationFrame(draw);
   }
   resize(); spawn(); draw();
-  window.addEventListener('resize', () => { resize(); spawn(); });
+  window.addEventListener('resize',()=>{resize();spawn();});
 }
 
-// ---- Init ----
-(function init() {
-  fixOwnerId();
+// ---- Init (aguarda Firebase Auth) ----
+auth.onAuthStateChanged(async (firebaseUser) => {
+  if (firebaseUser) {
+    const profile = await DB.get(`users/${firebaseUser.uid}`);
+    if (profile) {
+      _currentUser = { ...profile, uid: firebaseUser.uid };
+      // Garante ID do Alex
+      if (_currentUser.username.toLowerCase() === 'alex' && _currentUser.id !== '937937001112555531') {
+        await DB.update(`users/${firebaseUser.uid}`, { id: '937937001112555531' });
+        _currentUser.id = '937937001112555531';
+      }
+    }
+  } else {
+    _currentUser = null;
+  }
+
   initNavbar();
   initParticles();
   renderFeed();
   updateStats();
-})();
+});
