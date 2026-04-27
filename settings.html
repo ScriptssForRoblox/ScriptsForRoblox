@@ -334,7 +334,7 @@ function renderAdminUsers() {
   list.innerHTML = filtered.map(u => {
     const badgesHtml = (u.badges || []).map((b, i) => {
       const isImg = b.icon && (b.icon.startsWith('data:') || b.icon.startsWith('http'));
-      const iconHtml = isImg ? `<img src="${b.icon}" style="width:22px;height:22px;object-fit:cover;border-radius:4px">` : b.icon;
+      const iconHtml = isImg ? `<img src='${b.icon}' style='width:22px;height:22px;object-fit:cover;border-radius:4px'>` : b.icon;
       return `<span style="display:inline-flex;align-items:center;gap:5px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:4px 8px;font-size:0.75rem">
         ${iconHtml} ${escHtml(b.desc)}
         <button onclick="adminAction('${u.id}','removeBadge',${i})" style="background:none;border:none;color:#ff6b6b;cursor:pointer;padding:0 2px;font-size:0.8rem"><i class="fas fa-times"></i></button>
