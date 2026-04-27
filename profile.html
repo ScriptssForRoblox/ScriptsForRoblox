@@ -342,7 +342,11 @@ function renderProfile(){
   }
   if (user.badges) {
     user.badges.forEach(b => {
-      badgesHtml += `<div class="badge-item" title="${escapeHtml(b.desc)}">${b.icon}</div>`;
+      const isImg = b.icon && (b.icon.startsWith('data:') || b.icon.startsWith('http'));
+      const iconHtml = isImg
+        ? `<img src="${b.icon}" style="width:22px;height:22px;object-fit:cover;border-radius:4px;vertical-align:middle">`
+        : b.icon;
+      badgesHtml += `<div class="badge-item" title="${escapeHtml(b.desc)}">${iconHtml}</div>`;
     });
   }
   badgesHtml += '</div>';
