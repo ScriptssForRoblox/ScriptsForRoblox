@@ -236,25 +236,11 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-storage-compat.js"></script>
-
+<script src="firebase.js"></script>
 <script src="app.js"></script>
 <script>
-// 1. Firebase Configuration (Replace with your actual config)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
 const storage = firebase.storage();
 
 // State
@@ -335,26 +321,25 @@ function updatePreview(customAv, customBanner){
   }
 }
 
-async function loadSettings(user) {
-  const doc = await db.collection('users').doc(user.uid).get();
-  if (!doc.exists) return;
-  currentUserData = doc.data();
-  
-  const user = currentUserData;
-  document.getElementById('sBio').value = user.bio||'';
-  document.getElementById('sAvatarColor').value = user.avatarColor||'#7c6af7';
-  document.getElementById('sNameColor').value = user.nameColor||'#ffffff';
+async function loadSettings(firebaseUser) {
+  const data = await DB.get('users/' + firebaseUser.uid);
+  if (!data) return;
+  currentUserData = data;
 
-  if (user.avatarURL) {
-    document.getElementById('avatarPreviewBox').innerHTML = `<img src="${user.avatarURL}" style="width:100%;height:100%;object-fit:cover">`;
+  document.getElementById('sBio').value = data.bio||'';
+  document.getElementById('sAvatarColor').value = data.avatarColor||'#7c6af7';
+  document.getElementById('sNameColor').value = data.nameColor||'#ffffff';
+
+  if (data.avatarURL) {
+    document.getElementById('avatarPreviewBox').innerHTML = `<img src="${data.avatarURL}" style="width:100%;height:100%;object-fit:cover">`;
   }
-  if (user.banner) {
-    const isVideo = user.banner.startsWith('data:video') || user.banner.endsWith('.mp4') || user.banner.endsWith('.webm');
+  if (data.banner) {
+    const isVideo = data.banner.startsWith('data:video') || data.banner.endsWith('.mp4') || data.banner.endsWith('.webm');
     document.getElementById('bannerPreviewBox').innerHTML = isVideo
-      ? `<video src='${user.banner}' style='width:100%;height:100%;object-fit:cover' autoplay loop muted playsinline></video>`
-      : `<img src='${user.banner}' style='width:100%;height:100%;object-fit:cover'>`;
+      ? `<video src='${data.banner}' style='width:100%;height:100%;object-fit:cover' autoplay loop muted playsinline></video>`
+      : `<img src='${data.banner}' style='width:100%;height:100%;object-fit:cover'>`;
   }
-  if (user.profileMusic) {
+  if (data.profileMusic) {
     document.getElementById('musicFileName').textContent = 'Música carregada ✅';
     document.getElementById('musicPreviewBox').style.color = '#7c6af7';
   }
@@ -362,7 +347,7 @@ async function loadSettings(user) {
   updatePreview();
 
   const alexId = "937937001112555531";
-  if(user.id === alexId || user.username?.toLowerCase() === 'alex') {
+  if(data.id === alexId || data.username?.toLowerCase() === 'alex') {
     document.getElementById('adminTabBtn').style.display = 'flex';
     renderAdminUsers();
   }
@@ -371,8 +356,8 @@ async function loadSettings(user) {
 // Firebase Auth Observer
 auth.onAuthStateChanged(user => {
   if (user) loadSettings(user);
-  else location.href = 'login';
-});
+  else window.location.href = 'login.html';
+})
 
 async function uploadFile(file, path) {
   const ref = storage.ref().child(path);
@@ -387,16 +372,14 @@ async function saveAccount(){
   
   try {
     const uid = auth.currentUser.uid;
-    let updates = {
-      bio: document.getElementById('sBio').value.trim()
-    };
+    let updates = { bio: document.getElementById('sBio').value.trim() };
 
     if (pendingAvatar) updates.avatarURL = await uploadFile(pendingAvatar, `avatars/${uid}`);
     if (pendingBanner) updates.banner = await uploadFile(pendingBanner, `banners/${uid}`);
     else if (selectedBannerUrl) updates.banner = selectedBannerUrl;
     if (pendingMusic) updates.profileMusic = await uploadFile(pendingMusic, `music/${uid}`);
 
-    await db.collection('users').doc(uid).update(updates);
+    await DB.update('users/' + uid, updates);
     showNotification('Configurações salvas!');
     location.reload();
   } catch (e) {
@@ -410,7 +393,7 @@ async function saveAccount(){
 
 async function saveAppearance(){
   const uid = auth.currentUser.uid;
-  await db.collection('users').doc(uid).update({
+  await DB.update('users/' + uid, {
     avatarColor: document.getElementById('sAvatarColor').value,
     nameColor: document.getElementById('sNameColor').value
   });
@@ -434,7 +417,7 @@ async function changePassword(){
 async function deleteAccount(){
   if(!confirm('Isso apagará tudo permanentemente. Continuar?')) return;
   const user = auth.currentUser;
-  await db.collection('users').doc(user.uid).delete();
+  await DB.remove('users/' + user.uid);
   await user.delete();
   location.href = './';
 }
@@ -443,13 +426,12 @@ async function deleteAccount(){
 
 async function renderAdminUsers() {
   const q = (document.getElementById('adminSearch')?.value || '').toLowerCase();
-  const snapshot = await db.collection('users').get();
-  const globalBadgesSnap = await db.collection('globalBadges').get();
-  const globalBadges = globalBadgesSnap.docs.map(d => ({id: d.id, ...d.data()}));
+  const usersData = await DB.get('users');
   const list = document.getElementById('adminUserList');
+  if (!usersData) { list.innerHTML = '<p style="color:#555">Nenhum usuário.</p>'; return; }
 
-  list.innerHTML = snapshot.docs
-    .map(doc => ({ uid: doc.id, ...doc.data() }))
+  list.innerHTML = Object.entries(usersData)
+    .map(([uid, u]) => ({ uid, ...u }))
     .filter(u => u.id?.includes(q) || u.username?.toLowerCase().includes(q))
     .map(u => {
       const badgesHtml = (u.badges || []).map((b, i) => `
@@ -463,7 +445,7 @@ async function renderAdminUsers() {
         <strong>${escHtml(u.username)}</strong> (#${u.id})
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
           <div class="settings-card">
-             <button class="btn-admin-action" onclick="adminAction('${u.uid}','${u.isBanned?'unban':'ban'}')">${u.isBanned?'Unban':'Ban'}</button>
+            <button class="btn-admin-action" onclick="adminAction('${u.uid}','${u.isBanned?'unban':'ban'}')">${u.isBanned?'Unban':'Ban'}</button>
           </div>
           <div class="settings-card">
             ${badgesHtml}
@@ -475,13 +457,12 @@ async function renderAdminUsers() {
 }
 
 async function adminAction(uid, type, extra) {
-  const ref = db.collection('users').doc(uid);
-  if (type === 'ban') await ref.update({ isBanned: true });
-  if (type === 'unban') await ref.update({ isBanned: false });
+  if (type === 'ban') await DB.update('users/' + uid, { isBanned: true });
+  if (type === 'unban') await DB.update('users/' + uid, { isBanned: false });
   if (type === 'removeBadge') {
-    const u = (await ref.get()).data();
+    const u = await DB.get('users/' + uid);
     u.badges.splice(extra, 1);
-    await ref.update({ badges: u.badges });
+    await DB.update('users/' + uid, { badges: u.badges });
   }
   renderAdminUsers();
 }
@@ -489,7 +470,7 @@ async function adminAction(uid, type, extra) {
 async function createGlobalBadge() {
   const desc = document.getElementById('newBadgeDesc').value.trim();
   const icon = document.getElementById('newBadgeIcon').value.trim();
-  await db.collection('globalBadges').add({ desc, icon, ts: Date.now() });
+  await DB.push('globalBadges', { desc, icon, ts: Date.now() });
   document.getElementById('newBadgeDesc').value = '';
   document.getElementById('newBadgeIcon').value = '';
   showNotification('Badge global criada!');
