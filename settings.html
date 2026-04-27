@@ -122,7 +122,14 @@
           <!-- Upload próprio -->
           <div style="display:flex;gap:8px;margin-bottom:10px">
             <input type="file" id="fileMusic" class="hidden-file" accept="audio/*">
-            <button class="btn-file" style="flex:1" onclick="document.getElementById('fileMusic').click()"><i class="fas fa-upload"></i> Enviar arquivo (.mp3)</button>
+            <button class="btn-file" style="flex:1" onclick="document.getElementById('fileMusic').click()"><i class="fas fa-upload"></i> Enviar arquivo (.mp3/.ogg)</button>
+          </div>
+          <!-- URL direta -->
+          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+            <input id="musicUrlInput" placeholder="Ou cole URL direta de .mp3 (ex: https://...arquivo.mp3)" 
+              style="flex:1;background:#0a0a0a;border:1px solid #222;padding:10px 14px;border-radius:10px;color:#fff;font-size:.85rem;outline:none"
+              oninput="this.style.borderColor=this.value?'#7c6af7':'#222'"/>
+            <button onclick="selectMusicUrl()" class="btn-file" style="flex-shrink:0;background:rgba(124,106,247,.15);border-color:rgba(124,106,247,.3);color:#7c6af7"><i class="fas fa-link"></i> Usar URL</button>
           </div>
           <!-- Busca de músicas via Deezer -->
           <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;overflow:hidden">
@@ -344,10 +351,28 @@ document.getElementById('fileBanner').onchange = (e) => {
 document.getElementById('fileMusic').onchange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  pendingMusic = file;
-  document.getElementById('musicFileName').textContent = file.name;
-  document.getElementById('musicPreviewBox').style.color = '#7c6af7';
+  if (file.size > 15 * 1024 * 1024) return showNotification('Música máx 15MB', 'error');
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    _selectedMusicUrl = ev.target.result; // base64
+    pendingMusic = null;
+    document.getElementById('musicFileName').textContent = file.name;
+    document.getElementById('musicPreviewBox').style.color = '#7c6af7';
+    showNotification('Arquivo carregado: ' + file.name);
+  };
+  reader.readAsDataURL(file);
 };
+
+function selectMusicUrl() {
+  const url = document.getElementById('musicUrlInput').value.trim();
+  if (!url) return showNotification('Cole uma URL válida.', 'error');
+  if (!url.startsWith('http')) return showNotification('URL inválida.', 'error');
+  _selectedMusicUrl = url;
+  pendingMusic = null;
+  document.getElementById('musicFileName').textContent = url.split('/').pop().split('?')[0] || 'Música via URL';
+  document.getElementById('musicPreviewBox').style.color = '#7c6af7';
+  showNotification('URL de música definida!');
+}
 
 // ---- Deezer Music Search ----
 let _selectedMusicUrl = '';
@@ -512,8 +537,7 @@ async function saveAccount(){
     if (pendingAvatar) updates.avatarURL = await uploadFile(pendingAvatar, `avatars/${uid}`);
     if (pendingBanner) updates.banner = await uploadFile(pendingBanner, `banners/${uid}`);
     else if (selectedBannerUrl) updates.banner = selectedBannerUrl;
-    if (pendingMusic) updates.profileMusic = await uploadFile(pendingMusic, `music/${uid}`);
-    else if (_selectedMusicUrl) updates.profileMusic = _selectedMusicUrl;
+    if (_selectedMusicUrl) updates.profileMusic = _selectedMusicUrl;
 
     await DB.update('users/' + uid, updates);
     showNotification('Configurações salvas!');
