@@ -8,11 +8,15 @@
 <!-- Open Graph / Discord Rich Embed -->
 <meta property="og:type" content="profile">
 <meta property="og:site_name" content="ScriptDrop">
-<meta property="og:title" content="Ver Perfil no ScriptDrop">
-<meta property="og:description" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop.">
-<meta property="og:image" content="https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png">
+<meta property="og:title" id="og-title" content="Ver Perfil no ScriptDrop">
+<meta property="og:description" id="og-desc" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop.">
+<meta property="og:image" id="og-image" content="https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png">
+<meta property="og:url" id="og-url" content="">
 <meta name="theme-color" content="#7c6af7">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:title" id="tw-title" content="Ver Perfil no ScriptDrop">
+<meta name="twitter:description" id="tw-desc" content="Confira os scripts e conquistas deste usuário na comunidade ScriptDrop.">
+<meta name="twitter:image" id="tw-image" content="https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png">
 
 <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
 <link rel="stylesheet" href="style.css"/>
@@ -41,8 +45,22 @@
     border-bottom: 1px solid var(--border);
     overflow: hidden;
     width: 100%;
-    background-size: cover !important;
-    background-position: center !important;
+    position: relative;
+  }
+  .profile-banner img, .profile-banner video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0; left: 0;
+  }
+  .profile-banner::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60%;
+    background: linear-gradient(to bottom, transparent, #050505);
+    pointer-events: none;
   }
 
   .profile-header {
@@ -315,8 +333,31 @@ function renderProfile(){
 
   if(!user){ wrap.innerHTML='<div class="sp-err"><i class="fas fa-user-slash"></i><h2>Usuário não encontrado</h2><a href="./" class="btn-hero-primary">Voltar</a></div>'; return; }
 
+  // ---- Atualiza Open Graph / Discord Embed ----
   const posts = JSON.parse(localStorage.getItem('posts')||'[]');
   const userPosts = posts.filter(p=>p.author===targetUser);
+  const ogTitle = `${targetUser} — ScriptDrop`;
+  const ogDesc = (user.bio && user.bio.trim())
+    ? `${user.bio.trim()} | ${userPosts.length} script(s) publicado(s)`
+    : `Veja o perfil de ${targetUser} no ScriptDrop — ${userPosts.length} script(s) publicado(s).`;
+  // Só usa a imagem se for URL pública (data: URLs não funcionam no Discord)
+  const ogImg = (user.avatarURL && !user.avatarURL.startsWith('data:'))
+    ? user.avatarURL
+    : (user.banner && !user.banner.startsWith('data:'))
+      ? user.banner
+      : 'https://raw.githubusercontent.com/PKHHonors/ScriptDrop/main/preview-banner.png';
+  const ogUrl = window.location.href;
+
+  document.title = ogTitle;
+  const setMeta = (id, val) => { const el = document.getElementById(id); if(el) el.setAttribute('content', val); };
+  setMeta('og-title', ogTitle);
+  setMeta('og-desc', ogDesc);
+  setMeta('og-image', ogImg);
+  setMeta('og-url', ogUrl);
+  setMeta('tw-title', ogTitle);
+  setMeta('tw-desc', ogDesc);
+  setMeta('tw-image', ogImg);
+  // --------------------------------------------
   const avatarColor = user.avatarColor||'#7c6af7';
   const nameColor = user.nameColor||'#ffffff';
   const banner = user.banner||'';
@@ -324,11 +365,12 @@ function renderProfile(){
   const uid = user.id || 'N/A';
   const totalViews = userPosts.reduce((a,p)=>a+(p.views||0),0);
 
-  // Define o banner (Imagem ou Vídeo) - CORREÇÃO DO ERRO
   const isVideoBanner = banner.startsWith('data:video') || banner.endsWith('.mp4') || banner.endsWith('.webm');
-  const bannerHtml = isVideoBanner 
-    ? `<video src="${escapeHtml(banner)}" class="profile-bg-video" autoplay loop muted playsinline></video>`
-    : `<div class="profile-bg-overlay" ${banner?`style="background-image:url('${escapeHtml(banner)}')"`:''}></div>`;
+  const bannerInner = banner
+    ? (isVideoBanner
+        ? `<video src='${banner}' autoplay loop muted playsinline style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'></video>`
+        : `<img src='${banner}' style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'>`)
+    : '';
 
   const isAlex = session === 'Alex';
 
@@ -356,7 +398,7 @@ function renderProfile(){
     : targetUser.charAt(0).toUpperCase();
 
   wrap.innerHTML = `
-  <div class="profile-banner" ${banner?`style="background-image:url('${escapeHtml(banner)}');background-size:cover;background-position:center"`:''}></div>
+  <div class="profile-banner">${bannerInner}</div>
     <div class="profile-header">
       <div class="profile-av-wrap">
         <div class="profile-av" style="background:${avatarColor}">${avatarContent}</div>

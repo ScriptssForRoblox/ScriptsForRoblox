@@ -83,30 +83,47 @@
       <div class="settings-card">
         <div class="fg"><label><i class="fas fa-quote-left"></i> Bio</label><input id="sBio" placeholder="Fale sobre você..."/></div>
         
+        <!-- Avatar -->
         <div class="fg">
           <label><i class="fas fa-image"></i> Avatar (PFP)</label>
-          <div class="file-input-wrap">
-            <input id="sAvatarURL" placeholder="URL da imagem..." style="flex-grow:1"/>
-            <input type="file" id="fileAvatar" class="hidden-file" accept="image/*" onchange="handleFile(this, 'sAvatarURL')"/>
-            <button class="btn-file" onclick="document.getElementById('fileAvatar').click()"><i class="fas fa-upload"></i> Arquivo</button>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div id="avatarPreviewBox" style="width:64px;height:64px;border-radius:16px;background:#1a1a1a;border:2px solid #333;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#555"><i class="fas fa-user"></i></div>
+            <div style="flex:1">
+              <input type="file" id="fileAvatar" class="hidden-file" accept="image/*" onchange="handleAvatar(this)">
+              <button class="btn-file" style="width:100%" onclick="document.getElementById('fileAvatar').click()"><i class="fas fa-upload"></i> Escolher Foto</button>
+              <input type="hidden" id="sAvatarURL">
+            </div>
           </div>
         </div>
 
+        <!-- Banner -->
         <div class="fg">
-          <label><i class="fas fa-panorama"></i> Banner</label>
-          <div class="file-input-wrap">
-            <input id="sBanner" placeholder="URL da imagem..." style="flex-grow:1"/>
-            <input type="file" id="fileBanner" class="hidden-file" accept="image/*" onchange="handleFile(this, 'sBanner')"/>
-            <button class="btn-file" onclick="document.getElementById('fileBanner').click()"><i class="fas fa-upload"></i> Arquivo</button>
+          <label><i class="fas fa-panorama"></i> Banner do Perfil <span style="color:#555;font-size:0.75rem">(imagem ou vídeo)</span></label>
+          <div id="bannerPreviewBox" style="width:100%;height:120px;border-radius:12px;background:#1a1a1a;border:2px dashed #333;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.85rem;cursor:pointer" onclick="document.getElementById('fileBanner').click()">
+            <span id="bannerPreviewLabel"><i class="fas fa-panorama"></i> Clique para escolher</span>
+          </div>
+          <input type="file" id="fileBanner" class="hidden-file" accept="image/*,video/mp4,video/webm" onchange="handleBanner(this)">
+          <input type="hidden" id="sBanner">
+          <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap" id="bannerPresets">
+            <span style="font-size:0.75rem;color:#555;align-self:center">Padrões:</span>
+            <img src="https://i.imgur.com/HtbGFQK.jpeg" onclick="setBannerPreset(this.src)" style="height:36px;width:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent" title="Preset 1">
+            <img src="https://i.imgur.com/8ZYXNFQ.jpeg" onclick="setBannerPreset(this.src)" style="height:36px;width:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent" title="Preset 2">
+            <img src="https://i.imgur.com/kXiis9X.png" onclick="setBannerPreset(this.src)" style="height:36px;width:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent" title="Preset 3">
+            <img src="https://i.imgur.com/JFHjdNr.jpeg" onclick="setBannerPreset(this.src)" style="height:36px;width:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent" title="Preset 4">
+            <img src="https://i.imgur.com/wSTFkRM.jpeg" onclick="setBannerPreset(this.src)" style="height:36px;width:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent" title="Preset 5">
           </div>
         </div>
 
+        <!-- Música -->
         <div class="fg">
-          <label><i class="fas fa-music"></i> Música do Perfil</label>
-          <div class="file-input-wrap">
-            <input id="sMusic" placeholder="URL .mp3 ou carregar arquivo..." style="flex-grow:1"/>
-            <input type="file" id="fileMusic" class="hidden-file" accept="audio/*" onchange="handleFile(this, 'sMusic')"/>
-            <button class="btn-file" onclick="document.getElementById('fileMusic').click()"><i class="fas fa-upload"></i> Arquivo</button>
+          <label><i class="fas fa-music"></i> Música do Perfil <span style="color:#555;font-size:0.75rem">(máx 10MB)</span></label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div id="musicPreviewBox" style="flex:1;background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px;color:#555;font-size:0.85rem">
+              <i class="fas fa-music"></i> <span id="musicFileName">Nenhuma música</span>
+            </div>
+            <input type="file" id="fileMusic" class="hidden-file" accept="audio/*" onchange="handleMusic(this)">
+            <button class="btn-file" onclick="document.getElementById('fileMusic').click()"><i class="fas fa-upload"></i></button>
+            <input type="hidden" id="sMusic">
           </div>
         </div>
 
@@ -231,15 +248,59 @@ function showTab(name, btn){
 function handleFile(input, targetId) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 15 * 1024 * 1024) { // 15MB
-    showNotification("Arquivo muito grande! Máximo de 15MB permitido.", "error");
-    input.value = "";
-    return;
+  if (file.size > 15 * 1024 * 1024) {
+    showNotification('Arquivo muito grande! Máximo de 15MB.', 'error');
+    input.value = ''; return;
   }
   const reader = new FileReader();
-  reader.onload = (e) => { 
-    document.getElementById(targetId).value = e.target.result; 
-    updatePreview(); 
+  reader.onload = (e) => { document.getElementById(targetId).value = e.target.result; updatePreview(); };
+  reader.readAsDataURL(file);
+}
+
+function handleAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showNotification('Avatar muito grande! Máx 10MB.', 'error'); input.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('sAvatarURL').value = e.target.result;
+    document.getElementById('avatarPreviewBox').innerHTML = `<img src='${e.target.result}' style='width:100%;height:100%;object-fit:cover'>`;
+    updatePreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleBanner(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 50 * 1024 * 1024) { showNotification('Banner muito grande! Máx 50MB.', 'error'); input.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('sBanner').value = e.target.result;
+    const box = document.getElementById('bannerPreviewBox');
+    const isVideo = file.type.startsWith('video/');
+    box.innerHTML = isVideo
+      ? `<video src='${e.target.result}' style='width:100%;height:100%;object-fit:cover' autoplay loop muted playsinline></video>`
+      : `<img src='${e.target.result}' style='width:100%;height:100%;object-fit:cover'>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function setBannerPreset(url) {
+  document.getElementById('sBanner').value = url;
+  const box = document.getElementById('bannerPreviewBox');
+  box.innerHTML = `<img src='${url}' style='width:100%;height:100%;object-fit:cover'>`;
+}
+
+function handleMusic(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showNotification('Música muito grande! Máx 10MB.', 'error'); input.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('sMusic').value = e.target.result;
+    document.getElementById('musicFileName').textContent = file.name;
+    document.getElementById('musicPreviewBox').style.color = '#7c6af7';
   };
   reader.readAsDataURL(file);
 }
@@ -278,16 +339,33 @@ function loadSettings(){
   document.getElementById('sBio').value = user.bio||'';
   document.getElementById('sAvatarURL').value = user.avatarURL||'';
   document.getElementById('sBanner').value = user.banner||'';
+  document.getElementById('sMusic').value = user.profileMusic||'';
   document.getElementById('sAvatarColor').value = user.avatarColor||'#7c6af7';
   document.getElementById('sNameColor').value = user.nameColor||'#ffffff';
+
+  // Carrega preview do avatar
+  if (user.avatarURL) {
+    document.getElementById('avatarPreviewBox').innerHTML = `<img src='${user.avatarURL}' style='width:100%;height:100%;object-fit:cover'>`;
+  }
+  // Carrega preview do banner
+  if (user.banner) {
+    const box = document.getElementById('bannerPreviewBox');
+    const isVideo = user.banner.startsWith('data:video') || user.banner.endsWith('.mp4') || user.banner.endsWith('.webm');
+    box.innerHTML = isVideo
+      ? `<video src='${user.banner}' style='width:100%;height:100%;object-fit:cover' autoplay loop muted playsinline></video>`
+      : `<img src='${user.banner}' style='width:100%;height:100%;object-fit:cover'>`;
+  }
+  // Carrega preview da música
+  if (user.profileMusic) {
+    document.getElementById('musicFileName').textContent = 'Música carregada ✅';
+    document.getElementById('musicPreviewBox').style.color = '#7c6af7';
+  }
+
   updatePreview();
-  
   document.getElementById('sAvatarColor').addEventListener('input', updatePreview);
   document.getElementById('sNameColor').addEventListener('input', updatePreview);
 
-  // Carrega status do discord
   const alexId = "937937001112555531";
-
   if(user.id === alexId || user.username.toLowerCase() === 'alex') {
     document.getElementById('adminTabBtn').style.display = 'flex';
     renderAdminUsers();
@@ -470,15 +548,15 @@ function saveAccount(){
   const users = JSON.parse(localStorage.getItem('users')||'[]');
   const idx = users.findIndex(u=>u.username===session);
   users[idx].bio = document.getElementById('sBio').value.trim();
-  users[idx].avatarURL = document.getElementById('sAvatarURL').value.trim();
-  users[idx].banner = document.getElementById('sBanner').value.trim();
-  users[idx].profileMusic = document.getElementById('sMusic').value.trim();
+  users[idx].avatarURL = document.getElementById('sAvatarURL').value;
+  users[idx].banner = document.getElementById('sBanner').value;
+  users[idx].profileMusic = document.getElementById('sMusic').value;
   try {
     localStorage.setItem('users', JSON.stringify(users));
     showMsg('accountMsg', '✅ Salvo com sucesso!', '#00d4aa');
-    showNotification("Configurações da conta salvas!");
+    showNotification('Configurações da conta salvas!');
   } catch (e) {
-    showNotification("Erro: O arquivo é muito pesado para o armazenamento do navegador. Use uma URL.", "error");
+    showNotification('Erro: arquivo muito pesado para o navegador. Tente um arquivo menor.', 'error');
   }
 }
 
