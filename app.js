@@ -577,9 +577,6 @@ function createBadgeHtml(desc, iconHtml, type) {
             ${iconHtml}
             <span class="badge-tooltip"><strong>${escapeHtml(desc)}</strong><p>Clique para saber mais</p></span>
           </a>`;
-  });
-
-  return { html: nameEl + (badges.length ? ' ' + badges.join('') : ''), nameId };
 }
 
 // Inicia RGB em todos os elementos com classe rgb-username

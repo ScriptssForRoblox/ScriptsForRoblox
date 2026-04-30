@@ -1075,7 +1075,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   transition: background .2s;
 }
 .notif-entry:hover { background: #1a1a1a; }
-.notif-entry.unread { background: rgba(124,106,247,.06); 
+.notif-entry.unread { background: rgba(124,106,247,.06); }
 .ne-icon { /* Corrigido o fechamento da regra CSS */
   width: 36px; height: 36px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
