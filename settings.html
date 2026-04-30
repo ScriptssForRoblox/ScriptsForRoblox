@@ -612,6 +612,8 @@ async function renderAdminUsers() {
           <span style="color:#444;font-size:.75rem;margin-left:8px;font-family:monospace">#${escHtml(u.id||u.uid||'')}</span>
           ${u.isBanned ? '<span style="background:#ff4757;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">BANIDO</span>' : ''}
           ${u.isVerified ? '<span style="background:#1e90ff;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">✅ Verificado</span>' : ''}
+          ${u.isAdmin ? '<span style="background:#e67e22;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">🛡️ Admin</span>' : ''}
+          ${u.isCoOwner ? '<span style="background:#8e44ad;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">👑 Co-Owner</span>' : ''}
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
@@ -621,7 +623,13 @@ async function renderAdminUsers() {
         <button onclick="adminAction('${u.uid}','${u.isVerified?'unverify':'verify'}')" style="background:${u.isVerified?'#2f3542':'#1e90ff'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
           <i class="fas fa-check-circle"></i> ${u.isVerified?'Remover Verificação':'Verificar'}
         </button>
-        <button onclick="openAddBadge('${u.uid}')" style="background:#7c6af7;color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
+        <button onclick="adminAction('${u.uid}','${u.isAdmin?'unadmin':'admin'}')" style="background:${u.isAdmin?'#2f3542':'#e67e22'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-shield-alt"></i> ${u.isAdmin?'Remover Admin':'Dar Admin'}
+        </button>
+        <button onclick="adminAction('${u.uid}','${u.isCoOwner?'uncoowner':'coowner'}')" style="background:${u.isCoOwner?'#2f3542':'#8e44ad'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-crown"></i> ${u.isCoOwner?'Remover Co-Owner':'Dar Co-Owner'}
+        </button>
+        <button onclick="openAddBadge('${u.uid}')" style="background:#333;color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
           <i class="fas fa-medal"></i> Add Badge
         </button>
       </div>
@@ -635,6 +643,10 @@ async function adminAction(uid, type, extra) {
   if (type === 'unban')    await DB.update('users/' + uid, { isBanned: false });
   if (type === 'verify')   await DB.update('users/' + uid, { isVerified: true });
   if (type === 'unverify') await DB.update('users/' + uid, { isVerified: false });
+  if (type === 'admin')    await DB.update('users/' + uid, { isAdmin: true });
+  if (type === 'unadmin')  await DB.update('users/' + uid, { isAdmin: false });
+  if (type === 'coowner')  await DB.update('users/' + uid, { isCoOwner: true });
+  if (type === 'uncoowner')await DB.update('users/' + uid, { isCoOwner: false });
   if (type === 'removeBadge') {
     const u = await DB.get('users/' + uid);
     const badges = u.badges || [];

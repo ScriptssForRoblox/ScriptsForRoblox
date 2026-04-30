@@ -68,7 +68,7 @@ async function register() {
       uid,
       username,
       avatarURL: '',
-      avatarColor: '#7c6af7',
+      avatarColor: '#222222',
       nameColor: '#ffffff',
       bio: '',
       banner: '',
@@ -305,8 +305,8 @@ async function renderReactions(path, container) {
     const users = data[encodeURIComponent(emoji)] || {};
     const count = Object.keys(users).length;
     const mine = uid && users[uid];
-    return `<button onclick="toggleReaction('${path}','${emoji}')" 
-      style="background:${mine?'rgba(124,106,247,.25)':'rgba(255,255,255,.04)'};border:1px solid ${mine?'rgba(124,106,247,.5)':'rgba(255,255,255,.08)'};border-radius:20px;padding:4px 10px;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;color:#fff"
+    return `<button onclick="toggleReaction('${path}','${emoji}')"
+      style="background:${mine?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)'};border:1px solid ${mine?'rgba(255,255,255,.3)':'rgba(255,255,255,.08)'};border-radius:20px;padding:4px 10px;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;color:#fff"
       onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform='scale(1)'">
       ${emoji}${count > 0 ? `<span style="font-size:.72rem;color:${mine?'#b0a3ff':'#888'};font-weight:700">${count}</span>` : ''}
     </button>`;
@@ -429,7 +429,7 @@ async function liveSearch(q) {
       const nameStyle = isAlex ? 'class="rgb-username" style="font-weight:700"' : `style="font-weight:700;color:${u.nameColor||'#fff'}"` ;
       const badges = [];
       if (isAlex) badges.push('\u26a1');
-      if (u.isVerified) badges.push(VERIFIED_ICON_SM);
+      if (u.isVerified) badges.push('\u2714\ufe0f');
       (u.badges||[]).slice(0,2).forEach(b => {
         const isImg = b.icon&&(b.icon.startsWith('http')||b.icon.startsWith('data'));
         badges.push(isImg ? `<img src="${b.icon}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;vertical-align:middle">` : b.icon);
@@ -491,7 +491,7 @@ async function renderFeed() {
       : (p.author||'?').charAt(0).toUpperCase();
     const badges = [];
     if (isAlex) badges.push('<span style="font-size:.8rem">⚡</span>');
-    if (u.isVerified) badges.push(VERIFIED_ICON_SM);
+      if (u.isVerified) badges.push('<span style="font-size:.8rem">✔️</span>');
     (u.badges||[]).slice(0,2).forEach(b => {
       const isImg = b.icon && (b.icon.startsWith('http')||b.icon.startsWith('data'));
       badges.push(isImg ? `<img src="${b.icon}" style="width:13px;height:13px;object-fit:cover;border-radius:2px;vertical-align:middle">` : `<span style="font-size:.75rem">${b.icon}</span>`);
@@ -549,9 +549,6 @@ async function updateStats() {
   ['statVisits','sideStatVisits'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=visits; });
 }
 
-const VERIFIED_ICON = '<img src="https://i.ibb.co/1Yr4JzCM/i-removebg-preview.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle" title="Verificado">';
-const VERIFIED_ICON_SM = '<img src="https://i.ibb.co/1Yr4JzCM/i-removebg-preview.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle" title="Verificado">';
-
 // ---- Helper: renderiza nome com cor/RGB + badges ----
 function renderUsername(u, size = '.88rem') {
   const isAlex = u.id === '937937001112555531' || u.username?.toLowerCase() === 'alex';
@@ -563,7 +560,7 @@ function renderUsername(u, size = '.88rem') {
 
   const badges = [];
   if (isAlex) badges.push('<span title="Owner" style="font-size:1rem">⚡</span>');
-  if (u.isVerified) badges.push('<span title="Verificado" style="font-size:.9rem">✅</span>');
+  if (u.isVerified) badges.push('<span title="Verificado" style="font-size:.9rem">✔️</span>');
   (u.badges||[]).forEach(b => {
     const isImg = b.icon && (b.icon.startsWith('http') || b.icon.startsWith('data'));
     badges.push(isImg
@@ -576,11 +573,12 @@ function renderUsername(u, size = '.88rem') {
 
 // Inicia RGB em todos os elementos com classe rgb-username
 function startRgbUsernames() {
-  let h = 0;
+  let b = 100; let dir = -1;
   setInterval(() => {
-    h = (h + 2) % 360;
+    b += dir * 2; if(b <= 50 || b >= 100) dir *= -1;
     document.querySelectorAll('.rgb-username').forEach(el => {
-      el.style.color = `hsl(${h},100%,65%)`;
+      el.style.color = `rgb(${b},${b},${b})`;
+      el.style.textShadow = `0 0 8px rgba(255,255,255,${(100-b)/100})`;
     });
   }, 30);
 }
@@ -611,7 +609,7 @@ function initNavbar() {
         navAvatar.innerHTML = `<img src="${escapeHtml(_currentUser.avatarURL)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
       } else {
         navAvatar.textContent = _currentUser.username.charAt(0).toUpperCase();
-        navAvatar.style.background = _currentUser.avatarColor || '#7c6af7';
+        navAvatar.style.background = _currentUser.avatarColor || '#333';
       }
     }
     startRgbUsernames();
@@ -662,7 +660,7 @@ function initParticles() {
   function spawn() { dots=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,a:Math.random()*.5+.1})); }
   function draw() {
     ctx.clearRect(0,0,W,H);
-    dots.forEach(d=>{d.x+=d.vx;d.y+=d.vy;if(d.x<0||d.x>W)d.vx*=-1;if(d.y<0||d.y>H)d.vy*=-1;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fillStyle=`rgba(124,106,247,${d.a})`;ctx.fill();});
+    dots.forEach(d=>{d.x+=d.vx;d.y+=d.vy;if(d.x<0||d.x>W)d.vx*=-1;if(d.y<0||d.y>H)d.vy*=-1;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${d.a})`;ctx.fill();});
     requestAnimationFrame(draw);
   }
   resize(); spawn(); draw();
