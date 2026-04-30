@@ -128,7 +128,7 @@
           <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
             <input id="musicUrlInput" placeholder="Ou cole URL direta de .mp3 (ex: https://...arquivo.mp3)" 
               style="flex:1;background:#0a0a0a;border:1px solid #222;padding:10px 14px;border-radius:10px;color:#fff;font-size:.85rem;outline:none"
-              oninput="this.style.borderColor=this.value?'#7c6af7':'#222'"/>
+              oninput="this.style.borderColor=this.value?'#fff':'#222'"/>
             <button onclick="selectMusicUrl()" class="btn-file" style="flex-shrink:0;background:rgba(124,106,247,.15);border-color:rgba(124,106,247,.3);color:#7c6af7"><i class="fas fa-link"></i> Usar URL</button>
           </div>
           <!-- Busca de músicas via Deezer -->
@@ -612,8 +612,6 @@ async function renderAdminUsers() {
           <span style="color:#444;font-size:.75rem;margin-left:8px;font-family:monospace">#${escHtml(u.id||u.uid||'')}</span>
           ${u.isBanned ? '<span style="background:#ff4757;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">BANIDO</span>' : ''}
           ${u.isVerified ? '<span style="background:#1e90ff;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">✅ Verificado</span>' : ''}
-          ${u.isAdmin ? '<span style="background:#e67e22;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">🛡️ Admin</span>' : ''}
-          ${u.isCoOwner ? '<span style="background:#8e44ad;color:#fff;font-size:.7rem;padding:2px 7px;border-radius:4px;margin-left:6px">👑 Co-Owner</span>' : ''}
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
@@ -623,13 +621,7 @@ async function renderAdminUsers() {
         <button onclick="adminAction('${u.uid}','${u.isVerified?'unverify':'verify'}')" style="background:${u.isVerified?'#2f3542':'#1e90ff'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
           <i class="fas fa-check-circle"></i> ${u.isVerified?'Remover Verificação':'Verificar'}
         </button>
-        <button onclick="adminAction('${u.uid}','${u.isAdmin?'unadmin':'admin'}')" style="background:${u.isAdmin?'#2f3542':'#e67e22'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
-          <i class="fas fa-shield-alt"></i> ${u.isAdmin?'Remover Admin':'Dar Admin'}
-        </button>
-        <button onclick="adminAction('${u.uid}','${u.isCoOwner?'uncoowner':'coowner'}')" style="background:${u.isCoOwner?'#2f3542':'#8e44ad'};color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
-          <i class="fas fa-crown"></i> ${u.isCoOwner?'Remover Co-Owner':'Dar Co-Owner'}
-        </button>
-        <button onclick="openAddBadge('${u.uid}')" style="background:#333;color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
+        <button onclick="openAddBadge('${u.uid}')" style="background:#7c6af7;color:#fff;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px">
           <i class="fas fa-medal"></i> Add Badge
         </button>
       </div>
@@ -643,10 +635,6 @@ async function adminAction(uid, type, extra) {
   if (type === 'unban')    await DB.update('users/' + uid, { isBanned: false });
   if (type === 'verify')   await DB.update('users/' + uid, { isVerified: true });
   if (type === 'unverify') await DB.update('users/' + uid, { isVerified: false });
-  if (type === 'admin')    await DB.update('users/' + uid, { isAdmin: true });
-  if (type === 'unadmin')  await DB.update('users/' + uid, { isAdmin: false });
-  if (type === 'coowner')  await DB.update('users/' + uid, { isCoOwner: true });
-  if (type === 'uncoowner')await DB.update('users/' + uid, { isCoOwner: false });
   if (type === 'removeBadge') {
     const u = await DB.get('users/' + uid);
     const badges = u.badges || [];
@@ -807,6 +795,21 @@ async function confirmAddBadge() {
 }
 
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ---- Music Player on Profile Page (Placeholder - assuming profile.html exists) ----
+// This function would be called on the profile page to initialize the music player
+function renderProfileBackground() {
+  const profileBg = document.getElementById('profileBackground'); // Assuming an element with this ID
+  if (!profileBg || !currentUserData?.banner) return;
+
+  const isVideo = currentUserData.banner.startsWith('data:video') || currentUserData.banner.endsWith('.mp4') || currentUserData.banner.endsWith('.webm');
+  if (isVideo) {
+    profileBg.innerHTML = `<video src="${currentUserData.banner}" autoplay loop muted playsinline class="profile-bg-fixed"></video>`;
+  } else {
+    profileBg.style.backgroundImage = `url('${currentUserData.banner}')`;
+    profileBg.classList.add('profile-bg-fixed');
+  }
+}
 </script>
 </body>
 </html>

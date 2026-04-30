@@ -60,10 +60,10 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
-  height: 64px;
+  height: 70px; /* Aumenta um pouco a altura da navbar */
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  gap: 16px;
+  grid-template-columns: auto 1fr auto auto; /* Logo | Links | Search | User */
+  gap: 20px;
   align-items: center;
 }
 
@@ -72,19 +72,20 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   position: relative;
   max-width: 420px;
   width: 100%;
-  justify-self: center;
+  justify-self: center; /* Centraliza a busca */
+  grid-column: 2; /* Coloca a busca na segunda coluna do grid */
 }
 .nav-search-box {
   display: flex; align-items: center; gap: 10px;
   background: #111;
-  border: 1px solid #2a2a2a;
+  border: 1px solid #222;
   border-radius: 10px;
   padding: 0 14px;
-  height: 38px;
+  height: 42px; /* Aumenta um pouco a altura da busca */
   transition: border-color .2s, box-shadow .2s;
 }
 .nav-search-box:focus-within {
-  border-color: #444;
+  border-color: #555;
   box-shadow: 0 0 0 3px rgba(255,255,255,.04);
 }
 .nav-search-box input {
@@ -92,7 +93,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   color: #fff; font-size: .88rem; flex: 1;
   font-family: inherit;
 }
-.nav-search-box input::placeholder { color: #444; }
+.nav-search-box input::placeholder { color: #666; }
 
 .nav-logo {
   font-size: 1.5rem;
@@ -104,7 +105,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 }
 
 .logo-glow { color: #ffffff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); }
-.acc { color: #888; }
+.acc { color: #666; }
 .nav-links { display: flex; gap: 25px; margin-left: 40px; }
 .nl { color: #888; font-weight: 500; font-size: 0.95rem; }
 .nl:hover, .nl.active { color: #fff; }
@@ -359,7 +360,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   padding: 100px 20px;
   text-align: center;
   position: relative;
-  display: flex;
+  display: flex; /* Mantém como flex para centralizar conteúdo */
   flex-direction: column;
   align-items: center;
 }
@@ -474,8 +475,8 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   flex-direction: column;
 }
 
-.post-card:hover { transform: translateY(-8px); border-color: #7c6af7; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.pc-top { padding: 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #555; }
+.post-card:hover { transform: translateY(-8px); border-color: #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.pc-top { padding: 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #666; }
 .pc-img { height: 160px; background: #0a0a0a; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
 .pc-img img { width: 100%; height: 100%; object-fit: cover; }
 .pc-img-placeholder { font-size: 2.5rem; color: #161616; background: #0a0a0a; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -539,14 +540,15 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   padding: 28px 28px 20px;
   border-bottom: 1px solid #1a1a1a;
   display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;
+  background: rgba(17,17,17,0.8); /* Fundo semi-transparente para o header */
+  backdrop-filter: blur(10px);
 }
 .sp-title { font-size: 1.7rem; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 10px; }
 .sp-meta { display: flex; flex-wrap: wrap; gap: 12px; }
 .sp-meta-chip {
   display: flex; align-items: center; gap: 5px;
   background: #1a1a1a; border: 1px solid #222;
-  padding: 4px 10px; border-radius: 20px;
-  font-size: .75rem; color: #888;
+  padding: 4px 10px; border-radius: 20px; font-size: .75rem; color: #888;
 }
 .sp-meta-chip i { color: #fff; font-size: .7rem; }
 .sp-meta-chip a { color: #fff; }
@@ -622,15 +624,15 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   padding: 12px 16px; border-radius: 12px; color: #fff; font-size: .9rem;
   transition: border-color .2s;
 }
-.comment-input-wrap input:focus { outline: none; border-color: #7c6af7; box-shadow: 0 0 0 3px rgba(124,106,247,.1); }
+.comment-input-wrap input:focus { outline: none; border-color: #555; box-shadow: 0 0 0 3px rgba(255,255,255,.04); }
 .btn-send {
-  background: #7c6af7; color: #fff;
+  background: #fff; color: #000;
   padding: 0 20px; border-radius: 12px; font-weight: 700; font-size: .9rem;
 }
-.btn-send:hover { background: #6b5ce7; }
+.btn-send:hover { background: #eee; }
 .comment-item {
   display: flex; gap: 12px;
-  padding: 14px 0; border-bottom: 1px solid #1a1a1a;
+  padding: 14px 0; border-bottom: 1px solid #222;
 }
 .comment-item:last-child { border: none; }
 .comment-av {
@@ -640,7 +642,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 }
 .comment-body { flex: 1; }
 .comment-author a { font-weight: 700; font-size: .88rem; color: #fff; }
-.comment-author a:hover { color: #7c6af7; }
+.comment-author a:hover { color: #ccc; }
 .comment-time { font-size: .7rem; color: #555; margin-left: 8px; }
 .comment-text { font-size: .88rem; color: #aaa; margin-top: 5px; line-height: 1.5; }
 
@@ -648,7 +650,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 .sp-sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 90px; }
 
 /* Card do autor */
-.sp-author-card { background: #111; border: 1px solid #1e1e1e; border-radius: 20px; overflow: hidden; }
+.sp-author-card { background: rgba(17,17,17,0.8); border: 1px solid #222; border-radius: 20px; overflow: hidden; backdrop-filter: blur(10px); }
 .sp-author-banner { height: 90px; background: linear-gradient(135deg,#1a1a2e,#16213e); background-size: cover; background-position: center; }
 .sp-author-body { padding: 0 20px 20px; text-align: center; margin-top: -44px; }
 .sp-author-av {
@@ -661,11 +663,11 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 .sp-author-bio { font-size: .82rem; color: #555; margin-bottom: 16px; line-height: 1.5; }
 .btn-view-profile {
   display: block; width: 100%; padding: 10px;
-  background: rgba(124,106,247,.1); border: 1px solid rgba(124,106,247,.2);
-  border-radius: 10px; font-weight: 700; font-size: .85rem; color: #7c6af7;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px; font-weight: 700; font-size: .85rem; color: #ccc;
   text-align: center; transition: all .2s;
 }
-.btn-view-profile:hover { background: #7c6af7; color: #fff; border-color: #7c6af7; }
+.btn-view-profile:hover { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.2); }
 
 /* Card mais scripts */
 .sp-more-card { background: #111; border: 1px solid #1e1e1e; border-radius: 20px; padding: 20px; }
@@ -681,16 +683,15 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   overflow: hidden;
 }
 .more-item-icon img { width: 100%; height: 100%; object-fit: cover; }
-.more-title { font-size: .85rem; font-weight: 700; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.more-title { font-size: .85rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .more-meta { font-size: .72rem; color: #555; }
-.more-item:hover .more-title { color: #7c6af7; }
+.more-item:hover .more-title { color: #ccc; }
 
 /* Stats card */
 .sp-stats-card { background: #111; border: 1px solid #1e1e1e; border-radius: 20px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .sp-stat { background: #0d0d0d; border-radius: 12px; padding: 14px; text-align: center; }
 .sp-stat-num { font-size: 1.4rem; font-weight: 900; color: #fff; }
 .sp-stat-label { font-size: .68rem; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 2px; }
-
 /* ---- Full Page Profile Banner ---- */
 .profile-bg-overlay, .profile-bg-video {
   position: fixed;
@@ -698,7 +699,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   z-index: -2;
   object-fit: cover;
   filter: brightness(0.4);
-  pointer-events: none;
+  pointer-events: none; /* Garante que não interfere com cliques */
 }
 
 .profile-bg-overlay { background-size: cover; background-position: center; background-attachment: fixed; }
@@ -709,10 +710,10 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   bottom: 20px;
   right: 20px;
   background: rgba(10, 10, 10, 0.9);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 15px;
-  border-radius: 15px;
+  border-radius: 12px;
   z-index: 2000;
   width: 220px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -720,8 +721,8 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 .music-info { margin-bottom: 10px; text-align: center; }
 .music-name { font-size: 0.8rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .music-controls { display: flex; justify-content: center; align-items: center; gap: 15px; }
-.m-btn { background: none; color: #888; font-size: 1rem; }
-.m-btn:hover { color: #7c6af7; }
+.m-btn { background: none; color: #aaa; font-size: 1rem; }
+.m-btn:hover { color: #fff; }
 .m-btn.play-pause { font-size: 1.5rem; color: #fff; }
 
 /* ---- Private Chat (Bottom Center) ---- */
@@ -765,7 +766,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   font-weight: 800;
   font-size: 0.85rem;
   text-transform: uppercase;
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px; /* Garante que o ícone e texto fiquem alinhados */
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
   color: #fff;
@@ -914,7 +915,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   transition: transform 0.2s;
 }
 .badge-item:hover { transform: scale(1.2); }
-
+/* Tooltip para badges */
 .badge-tooltip {
   position: absolute;
   bottom: 140%;
@@ -922,7 +923,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   transform: translateX(-50%) translateY(10px);
   background: #111;
   border: 1px solid #333;
-  padding: 10px;
+  padding: 8px 12px;
   border-radius: 8px;
   width: 180px;
   text-align: center;
@@ -931,7 +932,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   visibility: hidden;
   transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   z-index: 1000;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
 }
 
 .badge-item:hover .badge-tooltip {
@@ -940,8 +941,8 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   transform: translateX(-50%) translateY(0);
 }
 
-.badge-tooltip strong { display: block; color: #fff; font-size: 0.85rem; margin-bottom: 4px; border-bottom: 1px solid #222; padding-bottom: 4px; }
-.badge-tooltip p { color: #888; font-size: 0.7rem; line-height: 1.3; margin: 0; }
+.badge-tooltip strong { display: block; color: #fff; font-size: 0.8rem; margin-bottom: 4px; border-bottom: 1px solid #222; padding-bottom: 4px; }
+.badge-tooltip p { color: #aaa; font-size: 0.65rem; line-height: 1.3; margin: 0; }
 
 /* ---- Official Badges (Discord Style) ---- */
 .badges-row {
@@ -1052,7 +1053,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   padding: 15px 20px;
   border-radius: 12px;
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Alinha o ícone com o topo do texto */
   gap: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1096,7 +1097,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   max-height: 400px; overflow-y: auto;
   z-index: 2000;
 }
-.notif-panel.open { display: flex; animation: scaleIn .2s ease; }
+.notif-panel.open { display: flex; animation: scaleIn .2s ease forwards; transform-origin: top right; }
 .notif-entry {
   display: flex; align-items: flex-start; gap: 12px;
   padding: 14px 16px; border-bottom: 1px solid #1a1a1a;
@@ -1104,7 +1105,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 }
 .notif-entry:hover { background: #1a1a1a; }
 .notif-entry.unread { background: rgba(124,106,247,.06); 
-.ne-icon {
+.ne-icon { /* Corrigido o fechamento da regra CSS */
   width: 36px; height: 36px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: .9rem; flex-shrink: 0;
@@ -1194,11 +1195,11 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   padding: 12px 16px; border-radius: 12px; color: #fff; font-size: .9rem;
 }
 .comment-input-wrap input:focus { outline: none; border-color: #7c6af7; }
-.btn-send {
-  background: #7c6af7; color: #fff;
+.btn-send { /* Ajustado para o novo estilo de botão */
+  background: #fff; color: #000;
   padding: 0 20px; border-radius: 12px; font-weight: 700;
 }
-.btn-send:hover { background: #6b5ce7; }
+.btn-send:hover { background: #eee; }
 
 /* ---- Follow & Chat buttons on script page ---- */
 .btn-follow {
@@ -1206,7 +1207,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   font-weight: 700; font-size: .82rem;
   display: inline-flex; align-items: center; gap: 7px;
   background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.1); color: #fff;
+  border: 1px solid rgba(255,255,255,.1); color: #ccc;
   transition: all .2s;
 }
 .btn-follow:hover { background: rgba(124,106,247,.2); border-color: #7c6af7; }
@@ -1218,7 +1219,7 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
   background: rgba(30,144,255,.1);
   border: 1px solid rgba(30,144,255,.3); color: #1e90ff;
 }
-.btn-chat-link:hover { background: #1e90ff; color: #fff; }
+.btn-chat-link:hover { background: #1e90ff; color: #fff; } /* Mantido o hover azul para chat */
 
 /* ---- sp-hero banner ---- */
 .sp-hero {
@@ -1276,35 +1277,67 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 .sp-err i { font-size: 3rem; color: #333; }
 .sp-err h2 { color: #888; }
 
-/* ---- OVERRIDES: Cards, Comentários, Perfil, Navbar Search ---- */
+/* gsr-item NÃO deve ficar branco no hover */
+.gsr-item { display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .15s;text-decoration:none; }
+.gsr-item:hover { background:#1a1a1a !important; color:inherit !important; transform:none !important; box-shadow:none !important; }
+.gsr-item:hover * { color:inherit !important; }
+.gsr-item .gsr-name { font-size:.88rem;font-weight:600;color:#fff; }
+.gsr-item .gsr-sub { font-size:.72rem;color:#555; }
+
+/* Links e itens de dropdown NÃO ficam brancos */
+.nav-dropdown a:hover { background:#1e1e1e !important; color:#fff !important; transform:none !important; box-shadow:none !important; } /* OK */
+.notif-entry:hover { background:#1a1a1a !important; color:inherit !important; transform:none !important; box-shadow:none !important; } /* OK */
+.recent-item:hover { background:transparent !important; transform:none !important; box-shadow:none !important; } /* OK */
+.more-item:hover { background:transparent !important; transform:none !important; box-shadow:none !important; } /* OK */
+.post-card:hover { transform:translateY(-5px) !important; background:#111 !important; color:inherit !important; box-shadow:0 16px 40px rgba(0,0,0,.7) !important; } /* OK */
+
+/* Banner cobrindo TODO o fundo do perfil */
+.profile-bg-fixed {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  filter: brightness(.18) blur(4px);
+  transform: scale(1.06);
+  pointer-events: none;
+}
+.profile-bg-fixed video {
+  width:100%;height:100%;object-fit:cover;
+  position:absolute;inset:0;
+}
+
+/* ---- OVERRIDES GERAIS para o tema Premium Dark ---- */
 
 /* Navbar grid com busca central */
-.nav-inner { grid-template-columns: auto 1fr auto auto !important; display: grid !important; gap: 16px; }
-.nav-search-wrap { position:relative; max-width:380px; width:100%; justify-self:center; }
-.nav-search-box { display:flex;align-items:center;gap:10px;background:#111;border:1px solid #222;border-radius:10px;padding:0 14px;height:36px;transition:border-color .2s,box-shadow .2s; }
-.nav-search-box:focus-within { border-color:#3a3a3a; box-shadow:0 0 0 3px rgba(255,255,255,.04); }
-.nav-search-box input { background:none;border:none;outline:none;color:#fff;font-size:.85rem;flex:1;font-family:inherit; }
-.nav-search-box input::placeholder { color:#3a3a3a; }
+.nav-inner { grid-template-columns: auto auto 1fr auto auto !important; display: grid !important; gap: 20px; } /* Adicionado mais uma coluna para links */
+.nav-links { margin-left: 0 !important; } /* Remove margin-left */
+.nav-search-wrap { grid-column: 3 !important; max-width: 480px !important; } /* Centraliza a busca na nova coluna */
+.nav-search-box { background: #0a0a0a !important; border: 1px solid #1a1a1a !important; height: 42px !important; }
+.nav-search-box:focus-within { border-color: #333 !important; box-shadow: 0 0 0 3px rgba(255,255,255,.03) !important; }
+.nav-search-box input::placeholder { color: #555 !important; }
+.nav-search-box i { color: #666 !important; }
 
 /* Cards de script melhorados */
-.post-card { background:#111 !important; border:1px solid #1a1a1a !important; border-radius:16px !important; transition:all .25s ease !important; }
-.post-card:hover { transform:translateY(-5px) !important; border-color:#2e2e2e !important; box-shadow:0 16px 40px rgba(0,0,0,.7) !important; }
-.pc-top { padding:12px 14px 0 !important; font-size:.72rem !important; color:#3a3a3a !important; }
-.pc-img { height:150px !important; margin:10px 10px 0 !important; border-radius:10px !important; }
-.pc-img-placeholder { color:#1e1e1e !important; border-radius:10px; }
-.pc-bottom { padding:12px 14px 14px !important; }
-.pc-title { color:#e0e0e0 !important; font-size:.92rem !important; line-height:1.3; }
-.pc-game { color:#555 !important; font-size:.75rem !important; }
+.post-card { background: #0d0d0d !important; border: 1px solid #1a1a1a !important; border-radius: 16px !important; transition: all .25s ease !important; }
+.post-card:hover { transform: translateY(-5px) !important; border-color: #2e2e2e !important; box-shadow: 0 16px 40px rgba(0,0,0,.7) !important; }
+.pc-top { padding: 12px 14px 0 !important; font-size: .72rem !important; color: #555 !important; }
+.pc-img { height: 150px !important; margin: 10px 10px 0 !important; border-radius: 10px !important; }
+.pc-img-placeholder { color: #1e1e1e !important; border-radius: 10px; }
+.pc-bottom { padding: 12px 14px 14px !important; }
+.pc-title { color: #e0e0e0 !important; font-size: .92rem !important; line-height: 1.3; }
+.pc-game { color: #666 !important; font-size: .75rem !important; }
 
 /* Comentários */
-.comment-item { background:#0d0d0d !important; border:1px solid #1a1a1a !important; border-radius:14px !important; padding:14px 16px !important; margin-bottom:10px !important; }
-.comment-av { border:2px solid #1e1e1e; }
-.comment-author a { color:#ddd !important; }
-.comment-author a:hover { color:#fff !important; }
-.comment-time { color:#3a3a3a !important; }
-.comment-text { color:#888 !important; line-height:1.6; }
-.comment-input-wrap input { background:#0d0d0d !important; border:1px solid #1e1e1e !important; }
-.comment-input-wrap input:focus { border-color:#3a3a3a !important; box-shadow:0 0 0 3px rgba(255,255,255,.04) !important; }
+.comment-item { background: #0d0d0d !important; border: 1px solid #1a1a1a !important; border-radius: 14px !important; padding: 14px 16px !important; margin-bottom: 10px !important; }
+.comment-av { border: 2px solid #1e1e1e; }
+.comment-author a { color: #ddd !important; }
+.comment-author a:hover { color: #fff !important; }
+.comment-time { color: #555 !important; }
+.comment-text { color: #aaa !important; line-height: 1.6; }
+.comment-input-wrap input { background: #0d0d0d !important; border: 1px solid #1e1e1e !important; }
+.comment-input-wrap input:focus { border-color: #3a3a3a !important; box-shadow: 0 0 0 3px rgba(255,255,255,.04) !important; }
 
 /* Perfil com banner cobrindo TODO o fundo */
 .profile-bg-fixed { position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-attachment:fixed;filter:brightness(.2) blur(3px);transform:scale(1.06); }
@@ -1312,9 +1345,9 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 #profileWrap { position:relative;z-index:1; }
 .profile-banner { height:340px; }
 .profile-banner::after { height:75%;background:linear-gradient(to bottom,transparent,#000) !important; }
-.profile-header { background:rgba(8,8,8,.75) !important; backdrop-filter:blur(28px) !important; border:1px solid rgba(255,255,255,.06) !important; border-radius:20px !important; margin:-120px 20px 0 !important; box-shadow:0 20px 60px rgba(0,0,0,.9) !important; }
-.profile-av { border:4px solid rgba(255,255,255,.08) !important; box-shadow:0 8px 30px rgba(0,0,0,.6) !important; }
-.profile-name { font-size:2.6rem !important; }
-.profile-bio { color:#666 !important; }
-.btn-edit-profile { background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.1) !important; color:#bbb !important; }
-.btn-edit-profile:hover { background:rgba(255,255,255,.12) !important; color:#fff !important; }
+.profile-header { background: rgba(8,8,8,.75) !important; backdrop-filter: blur(28px) !important; border: 1px solid rgba(255,255,255,.06) !important; border-radius: 20px !important; margin: -120px 20px 0 !important; box-shadow: 0 20px 60px rgba(0,0,0,.9) !important; }
+.profile-av { border: 4px solid rgba(255,255,255,.08) !important; box-shadow: 0 8px 30px rgba(0,0,0,.6) !important; }
+.profile-name { font-size: 2.6rem !important; }
+.profile-bio { color: #666 !important; }
+.btn-edit-profile { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.1) !important; color: #bbb !important; }
+.btn-edit-profile:hover { background: rgba(255,255,255,.12) !important; color: #fff !important; }

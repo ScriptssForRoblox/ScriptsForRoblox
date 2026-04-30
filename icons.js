@@ -80,6 +80,9 @@ const SD = {
       // 🛡️ Shield / Verified
       shield: `<svg ${s}><path d="M12 2L4 6V12C4 16.4 7.4 20.5 12 22C16.6 20.5 20 16.4 20 12V6L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 
+      // ✅ Shield with check (for verified badge)
+      checkshield: `<svg ${s}><path d="M12 2L4 6V12C4 16.4 7.4 20.5 12 22C16.6 20.5 20 16.4 20 12V6L12 2Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 12L11 14L15 10" stroke="#0f0f0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+
       // 🗑️ Trash
       trash: `<svg ${s}><path d="M3 6H21M8 6V4H16V6M19 6L18 20H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11V17M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
 

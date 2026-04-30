@@ -429,7 +429,7 @@ async function liveSearch(q) {
       const nameStyle = isAlex ? 'class="rgb-username" style="font-weight:700"' : `style="font-weight:700;color:${u.nameColor||'#fff'}"` ;
       const badges = [];
       if (isAlex) badges.push('\u26a1');
-      if (u.isVerified) badges.push('\u2714\ufe0f');
+      if (u.isVerified) badges.push(SD.icon('checkshield',16)); // Novo ícone para verificado
       (u.badges||[]).slice(0,2).forEach(b => {
         const isImg = b.icon&&(b.icon.startsWith('http')||b.icon.startsWith('data'));
         badges.push(isImg ? `<img src="${b.icon}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;vertical-align:middle">` : b.icon);
@@ -489,9 +489,9 @@ async function renderFeed() {
     const av = u.avatarURL
       ? `<img src="${escapeHtml(u.avatarURL)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
       : (p.author||'?').charAt(0).toUpperCase();
-    const badges = [];
+      const badges = []; // Badges aqui não terão tooltip, apenas ícone
     if (isAlex) badges.push('<span style="font-size:.8rem">⚡</span>');
-      if (u.isVerified) badges.push('<span style="font-size:.8rem">✔️</span>');
+      if (u.isVerified) badges.push(SD.icon('checkshield',14));
     (u.badges||[]).slice(0,2).forEach(b => {
       const isImg = b.icon && (b.icon.startsWith('http')||b.icon.startsWith('data'));
       badges.push(isImg ? `<img src="${b.icon}" style="width:13px;height:13px;object-fit:cover;border-radius:2px;vertical-align:middle">` : `<span style="font-size:.75rem">${b.icon}</span>`);
@@ -559,13 +559,24 @@ function renderUsername(u, size = '.88rem') {
   const nameEl = `<span ${nameId ? `id="${nameId}" class="rgb-username"` : ''} style="${nameStyle}">${escapeHtml(u.username)}</span>`;
 
   const badges = [];
-  if (isAlex) badges.push('<span title="Owner" style="font-size:1rem">⚡</span>');
-  if (u.isVerified) badges.push('<span title="Verificado" style="font-size:.9rem">✔️</span>');
+  if (isAlex) badges.push(createBadgeHtml('Owner', '⚡', 'owner'));
+  if (u.isVerified) badges.push(createBadgeHtml('Verificado', SD.icon('checkshield',16), 'verified'));
   (u.badges||[]).forEach(b => {
     const isImg = b.icon && (b.icon.startsWith('http') || b.icon.startsWith('data'));
     badges.push(isImg
-      ? `<img src="${b.icon}" title="${escapeHtml(b.desc)}" style="width:16px;height:16px;object-fit:cover;border-radius:3px;vertical-align:middle">`
-      : `<span title="${escapeHtml(b.desc)}" style="font-size:.9rem">${b.icon}</span>`);
+      ? createBadgeHtml(b.desc, `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:3px;">`, b.desc)
+      : createBadgeHtml(b.desc, b.icon, b.desc));
+  });
+
+  return { html: nameEl + (badges.length ? ' ' + badges.join('') : ''), nameId };
+}
+
+// Helper para criar HTML de badge com tooltip e link
+function createBadgeHtml(desc, iconHtml, type) {
+  return `<a href="badge?type=${type}&desc=${encodeURIComponent(desc)}&icon=${encodeURIComponent(iconHtml)}" class="badge-item" title="${escapeHtml(desc)}">
+            ${iconHtml}
+            <span class="badge-tooltip"><strong>${escapeHtml(desc)}</strong><p>Clique para saber mais</p></span>
+          </a>`;
   });
 
   return { html: nameEl + (badges.length ? ' ' + badges.join('') : ''), nameId };
@@ -615,6 +626,10 @@ function initNavbar() {
     startRgbUsernames();
     renderNotifPanel();
 
+    // Adiciona o player de música se houver música no perfil
+    if (_currentUser.profileMusic) {
+      initMusicPlayer(_currentUser.profileMusic);
+    }
     // Corrige link do perfil na navbar
     document.querySelectorAll('a[href="profile"]').forEach(a => {
       a.href = `profile?user=${encodeURIComponent(_currentUser.username)}`;
@@ -650,6 +665,15 @@ function initNavbar() {
   if (modal) modal.addEventListener('click', e => { if (e.target === modal) closePostModal(); });
 }
 
+// ---- Music Player (Global) ----
+let _globalMusicPlayer = null;
+function initMusicPlayer(musicUrl) {
+  if (!musicUrl) return;
+  _globalMusicPlayer = new Audio(musicUrl);
+  _globalMusicPlayer.loop = true;
+  _globalMusicPlayer.volume = 0.3; // Volume padrão
+  // _globalMusicPlayer.play(); // Não auto-play para evitar problemas de UX
+}
 // ---- Particles ----
 function initParticles() {
   const canvas = document.getElementById('particles');
@@ -701,5 +725,10 @@ auth.onAuthStateChanged(async (firebaseUser) => {
   initNavbar();
   initParticles();
   renderFeed();
+
+  // Se estiver na página de perfil, renderiza o banner de fundo
+  if (window.location.pathname.includes('profile')) {
+    renderProfileBackground();
+  }
   updateStats();
 });
