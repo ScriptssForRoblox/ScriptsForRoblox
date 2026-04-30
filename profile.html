@@ -66,6 +66,7 @@
 </style>
 </head>
 <body>
+<div id="profileBgFixed" class="profile-bg-fixed"></div>
 <canvas id="particles"></canvas>
 
 <nav class="navbar" id="navbar">
@@ -240,7 +241,7 @@ async function renderProfile(){
   // Badges
   let badgesHtml='<div class="badges-row">';
   if(user.id==='937937001112555531')badgesHtml+=`<div class="badge-item" title="Owner">⚡</div>`;
-  if(user.isVerified)badgesHtml+=`<div class="badge-item" title="Verificado">✅</div>`;
+  if(user.isVerified)badgesHtml+=`<div class="badge-item" title="Verificado"><img src='https://i.ibb.co/1Yr4JzCM/i-removebg-preview.png' style='width:22px;height:22px;object-fit:contain'></div>`;
   (user.badges||[]).forEach(b=>{
     const isImg=b.icon&&(b.icon.startsWith('data:')||b.icon.startsWith('http'));
     badgesHtml+=`<div class="badge-item" title="${esc(b.desc)}">${isImg?`<img src='${b.icon}' style='width:24px;height:24px;object-fit:cover;border-radius:4px'>`:b.icon}</div>`;
@@ -252,6 +253,13 @@ async function renderProfile(){
   // Follow
   const isFollowing=(_currentUser?.following||[]).includes(targetUser);
   const followBtn=!isOwn&&_currentUser?`<button class="btn-follow ${isFollowing?'following':''}" onclick="toggleFollow('${targetUser}')" style="margin-top:15px">${isFollowing?'✓ Seguindo':'+ Seguir'}</button>`:'';
+
+  // Banner no fundo inteiro da página
+  const bgDiv = document.getElementById('profileBgFixed');
+  if (bgDiv && banner) {
+    if (isVideo) bgDiv.innerHTML = `<video src='${banner}' autoplay loop muted playsinline></video>`;
+    else bgDiv.style.backgroundImage = `url('${banner}')`;
+  }
 
   wrap.innerHTML=`
   <div class="profile-banner">${bannerInner}</div>
