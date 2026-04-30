@@ -429,7 +429,7 @@ async function liveSearch(q) {
       const nameStyle = isAlex ? 'class="rgb-username" style="font-weight:700"' : `style="font-weight:700;color:${u.nameColor||'#fff'}"` ;
       const badges = [];
       if (isAlex) badges.push('\u26a1');
-      if (u.isVerified) badges.push('\u2705');
+      if (u.isVerified) badges.push(VERIFIED_ICON_SM);
       (u.badges||[]).slice(0,2).forEach(b => {
         const isImg = b.icon&&(b.icon.startsWith('http')||b.icon.startsWith('data'));
         badges.push(isImg ? `<img src="${b.icon}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;vertical-align:middle">` : b.icon);
@@ -491,7 +491,7 @@ async function renderFeed() {
       : (p.author||'?').charAt(0).toUpperCase();
     const badges = [];
     if (isAlex) badges.push('<span style="font-size:.8rem">⚡</span>');
-    if (u.isVerified) badges.push('<span style="font-size:.8rem">✅</span>');
+    if (u.isVerified) badges.push(VERIFIED_ICON_SM);
     (u.badges||[]).slice(0,2).forEach(b => {
       const isImg = b.icon && (b.icon.startsWith('http')||b.icon.startsWith('data'));
       badges.push(isImg ? `<img src="${b.icon}" style="width:13px;height:13px;object-fit:cover;border-radius:2px;vertical-align:middle">` : `<span style="font-size:.75rem">${b.icon}</span>`);
@@ -548,6 +548,9 @@ async function updateStats() {
   ['statUsers','sideStatUsers'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=uc; });
   ['statVisits','sideStatVisits'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=visits; });
 }
+
+const VERIFIED_ICON = '<img src="https://i.ibb.co/1Yr4JzCM/i-removebg-preview.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle" title="Verificado">';
+const VERIFIED_ICON_SM = '<img src="https://i.ibb.co/1Yr4JzCM/i-removebg-preview.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle" title="Verificado">';
 
 // ---- Helper: renderiza nome com cor/RGB + badges ----
 function renderUsername(u, size = '.88rem') {
