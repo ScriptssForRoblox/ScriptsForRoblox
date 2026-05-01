@@ -380,6 +380,11 @@ async function submitPost() {
   updateStats();
 }
 
+function openRaw(id) {
+  if (!id) return;
+  window.open(`raw.html?id=${id}`, '_blank');
+}
+
 async function copyScript(id, e) {
   if (e) e.preventDefault();
   const post = await DB.get(`posts/${id}`);

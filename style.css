@@ -1282,9 +1282,6 @@ button { cursor: pointer; border: none; outline: none; transition: all 0.3s ease
 /* ---- OVERRIDES GERAIS para o tema Premium Dark ---- */
 
 /* Navbar grid com busca central */
-.nav-inner { grid-template-columns: auto auto 1fr auto auto !important; display: grid !important; gap: 20px; } /* Adicionado mais uma coluna para links */
-.nav-links { margin-left: 0 !important; } /* Remove margin-left */
-.nav-search-wrap { grid-column: 3 !important; max-width: 480px !important; } /* Centraliza a busca na nova coluna */
 .nav-search-box { background: #0a0a0a !important; border: 1px solid #1a1a1a !important; height: 42px !important; }
 .nav-search-box:focus-within { border-color: #333 !important; box-shadow: 0 0 0 3px rgba(255,255,255,.03) !important; }
 .nav-search-box input::placeholder { color: #555 !important; }

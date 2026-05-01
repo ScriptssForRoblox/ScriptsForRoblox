@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Perfil — I'mScripts System</title>
+<title>Perfil — ScriptDrop</title>
 <meta property="og:type" content="profile">
 <meta property="og:site_name" content="⚡ ScriptDrop">
 <meta property="og:title" content="Ver Perfil — ScriptDrop">
@@ -42,7 +42,6 @@
   .btn-edit-profile { background:rgba(124,106,247,.1);border:1px solid rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;height:fit-content;font-weight:700;cursor:pointer; }
   .btn-edit-profile:hover { background:#7c6af7; }
   .profile-scripts { margin-top:50px;padding:0 20px; }
-  .profile-scripts .script-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px; }
   .uid-tag { background:#1a1a1a;border:1px solid #333;color:#666;padding:4px 10px;border-radius:6px;font-size:.75rem;font-family:monospace; }
   /* Music Player */
   #musicPlayer { position:fixed;bottom:24px;right:24px;z-index:999;background:rgba(15,15,15,.92);backdrop-filter:blur(20px);border:1px solid rgba(124,106,247,.3);border-radius:18px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:220px; }
@@ -66,12 +65,11 @@
 </style>
 </head>
 <body>
-<div id="profileBgFixed" class="profile-bg-fixed"></div>
 <canvas id="particles"></canvas>
 
 <nav class="navbar" id="navbar">
   <div class="nav-inner">
-    <a class="nav-logo" href="./"><div class="logo-glow">⚡</div><span>I'mScripts<span class="acc">System</span></span></a>
+    <a class="nav-logo" href="./"><div class="logo-glow">⚡</div><span>Script<span class="acc">Drop</span></span></a>
     <div class="nav-links">
       <a href="./" class="nl"><i class="fas fa-home"></i> Home</a>
       <a href="./#scripts" class="nl"><i class="fas fa-code"></i> Scripts</a>
@@ -165,8 +163,8 @@
 
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-logo">⚡ I'mScripts<span class="acc">System</span></div>
-    <p>© 2025 I'mScripts System</p>
+    <div class="footer-logo">⚡ Script<span class="acc">Drop</span></div>
+    <p>© 2025 ScriptDrop</p>
   </div>
 </footer>
 
@@ -235,13 +233,13 @@ async function renderProfile(){
   document.title=`${targetUser} — ScriptDrop`;
 
   const banner=user.banner||'';
-  const isVideo=banner.startsWith('data:video')||banner.endsWith('.mp4')||banner.endsWith('.webm');
-  const bannerInner=banner?(isVideo?`<video src='${banner}' autoplay loop muted playsinline style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'></video>`:`<img src='${banner}' style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'>`):'';
+  const isVideo = banner.includes('.mp4') || banner.includes('.webm') || banner.startsWith('data:video');
+  const bannerInner = banner ? (isVideo ? `<video src='${banner}' autoplay loop playsinline style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'></video>` : `<img src='${banner}' style='width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0'>`) : '';
 
   // Badges
   let badgesHtml='<div class="badges-row">';
   if(user.id==='937937001112555531')badgesHtml+=`<div class="badge-item" title="Owner">⚡</div>`;
-  if(user.isVerified)badgesHtml+=`<div class="badge-item" title="Verificado"><img src='https://i.ibb.co/1Yr4JzCM/i-removebg-preview.png' style='width:22px;height:22px;object-fit:contain'></div>`;
+  if(user.isVerified)badgesHtml+=`<div class="badge-item" title="Verificado">✅</div>`;
   (user.badges||[]).forEach(b=>{
     const isImg=b.icon&&(b.icon.startsWith('data:')||b.icon.startsWith('http'));
     badgesHtml+=`<div class="badge-item" title="${esc(b.desc)}">${isImg?`<img src='${b.icon}' style='width:24px;height:24px;object-fit:cover;border-radius:4px'>`:b.icon}</div>`;
@@ -253,13 +251,6 @@ async function renderProfile(){
   // Follow
   const isFollowing=(_currentUser?.following||[]).includes(targetUser);
   const followBtn=!isOwn&&_currentUser?`<button class="btn-follow ${isFollowing?'following':''}" onclick="toggleFollow('${targetUser}')" style="margin-top:15px">${isFollowing?'✓ Seguindo':'+ Seguir'}</button>`:'';
-
-  // Banner no fundo inteiro da página
-  const bgDiv = document.getElementById('profileBgFixed');
-  if (bgDiv && banner) {
-    if (isVideo) bgDiv.innerHTML = `<video src='${banner}' autoplay loop muted playsinline></video>`;
-    else bgDiv.style.backgroundImage = `url('${banner}')`;
-  }
 
   wrap.innerHTML=`
   <div class="profile-banner">${bannerInner}</div>
@@ -295,22 +286,19 @@ async function renderProfile(){
   initMusic(user);
 }
 
-function buildCard(p, isOwn){
-  const tags = (p.tags||[]).slice(0,3).map(t=>`<span class="tag-chip">${esc(t)}</span>`).join('');
-  const img = p.image
-    ? `<div class="pc-img"><img src="${esc(p.image)}" onerror="this.parentElement.style.display='none'"/></div>`
-    : `<div class="pc-img pc-img-placeholder" style="height:120px;background:#0a0a0a;display:flex;align-items:center;justify-content:center;color:#222;font-size:2rem"><i class="fas fa-code"></i></div>`;
-  return `<div class="post-card" style="position:relative;cursor:pointer" onclick="location.href='script?id=${p.id}'">
-    ${isOwn ? `<button class="btn-delete-script" onclick="event.stopPropagation();deletePost('${p.id}')"><i class="fas fa-trash"></i></button>` : ''}
-    <div class="pc-top">
-      <span class="pc-time"><i class="fas fa-clock" style="font-size:.65rem"></i> ${p.date||''}</span>
-      <span style="color:#7c6af7;font-size:.75rem"><i class="fas fa-eye"></i> ${p.views||0}</span>
-    </div>
-    ${img}
-    <div class="pc-bottom">
-      <div class="pc-title">${esc(p.title)}</div>
-      <div class="pc-game"><i class="fas fa-gamepad"></i> ${esc(p.game||'Universal')}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${tags}</div>
+function buildCard(p,isOwn){
+  const tags=(p.tags||[]).slice(0,3).map(t=>`<span class="tag-chip">${esc(t)}</span>`).join('');
+  const img=p.image?`<div class="card-img"><img src="${esc(p.image)}" onerror="this.parentElement.style.display='none'"/></div>`:'';
+  return `<div class="script-card" style="position:relative">
+    ${isOwn?`<button class="btn-delete-script" onclick="deletePost('${p.id}')"><i class="fas fa-trash"></i></button>`:''}
+    <div onclick="location.href='script?id=${p.id}'" style="cursor:pointer">
+      ${img}
+      <div class="card-body">
+        <div class="card-game"><i class="fas fa-gamepad"></i> ${esc(p.game||'Universal')}</div>
+        <div class="card-title">${esc(p.title)}</div>
+        <div class="card-tags">${tags}</div>
+        <div class="card-footer"><span class="card-views"><i class="fas fa-eye"></i> ${p.views||0}</span></div>
+      </div>
     </div>
   </div>`;
 }
